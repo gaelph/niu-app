@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   RefreshControl
 } from 'react-native';
-// import {KeyboardAwareScrollView as ScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { getRules, getList, useApiPolling, useApi } from '../api'
 import { Dimensions as Dim } from 'react-native'
 
