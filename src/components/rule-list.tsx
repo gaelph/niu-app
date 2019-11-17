@@ -218,7 +218,12 @@ function RuleElement({ rule, onRemove }) {
     })
   }, [localRule])
 
-  console.log(localRule)
+  const setRepeat = useCallback((repeat) => {
+    setLocalRule({
+      ...localRule,
+      repeat
+    })
+  }, [localRule])
 
   return (
     <View style={styles.item} onLayout={({ nativeEvent: { layout: { width } } }) => setWidth(width - 2)}>
@@ -234,22 +239,28 @@ function RuleElement({ rule, onRemove }) {
             </View>
             <Switch value={localRule.active} onValueChange={(value) => setActive(value)} />
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 8, paddingBottom: 4, position: 'relative', overflow: 'visible'}}>
-            {!editing &&
+          <View style={{ paddingHorizontal: 8, paddingBottom: 4 }} collapsable={false}>
+            {!editing && localRule.active && localRule.repeat &&
               <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
             }
             {editing &&
-              <View style={{ flexDirection: 'row'}}>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap' }} collapsable={false}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, marginTop: 8,  }}>
                 {
                   Object.keys(DayShortNames)
                   .map((day, i) => (
-                    <Touchable onPress={() => setDay(day as unknown as Day, !days[day])}>
-                      <View style={{ width: 24, height: 24, marginRight: 8, marginTop: 8, alignItems: 'center', justifyContent: 'center', borderColor: Colors.text.primary, borderWidth: 1, borderRadius: 12, opacity: localRule.days[day] ? 1 : 0.4 }}>
+                    <Touchable key={`${localRule.id}_${day}`} onPress={() => setDay(day as unknown as Day, !days[day])}>
+                      <View style={{ width: 24, height: 24, marginRight: 6,alignItems: 'center', justifyContent: 'center', borderColor: Colors.text.primary, borderWidth: 1, borderRadius: 12, opacity: localRule.days[day] ? 1 : 0.4 }}>
                         <Text style={[styles.text, { fontSize: 12}]}>{DayShortNames[day].charAt(0)}</Text>
                       </View>
                     </Touchable>
                   ))
                 }
+              </View>
+                <View style={{ flexDirection: 'row', flex: null, alignItems: 'center', justifyContent: 'flex-end', height: 24, marginTop: 8, }} collapsable={false}>
+                  <Text style={{ color: 'gray' }}>Repeat</Text>
+                  <CheckBox value={localRule.repeat} onValueChange={(value) => setRepeat(value)} />
+                </View>
               </View>
             }
           </View>

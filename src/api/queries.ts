@@ -93,6 +93,7 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
           [Day.Sat]: false,
           [Day.Sun]: false,
         },
+        repeat: true,
         schedules: [
           { from: '6:15', to: '8:00' },
           { from: '18:15', to: '22:30' },
@@ -111,6 +112,7 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
           [Day.Sat]: true,
           [Day.Sun]: true,
         },
+        repeat: true,
         schedules: [
           { from: '8:05', to: '22:00' },
         ],
@@ -128,6 +130,7 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
           [Day.Sat]: true,
           [Day.Sun]: true,
         },
+        repeat: false,
         schedules: [
           { from: '0:00', to: '23:59' },
         ],
@@ -146,6 +149,7 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
           [Day.Sat]: true,
           [Day.Sun]: true,
         },
+        repeat: false,
         schedules: [
           { from: '0:10', to: '1:33' },
           { from: '22:30', to: '23:59' },

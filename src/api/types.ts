@@ -58,5 +58,6 @@ export interface Rule {
     [Day.Sat]: boolean,
     [Day.Sun]: boolean,
   },
+  repeat: boolean,
   schedules: { from: string, to: string }[]
 }
