@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -35,10 +35,21 @@ const temp = {
 }
 
 let addRule = () => {
-  console.log('add rule noop')
 }
 
 export function Home() {
+  let [Screen, setScreen] = useState(Dim.get('window'))
+
+  useEffect(() => {
+    let handler = ({ window }) => {
+      setScreen(window)
+    }
+
+    Dim.addEventListener("change", handler)
+
+    return () => Dim.removeEventListener("change", handler)
+  }, [])
+
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000)
   let { data: rules } = useApi(getRules)
 
@@ -48,7 +59,7 @@ export function Home() {
     <KeyboardAvoidingView behavior={'position'}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { width: Screen.width }]}
         refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
         <View style={{ flex: null, width: '100%', }}>
           <AppBar />
