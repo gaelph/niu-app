@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, Switch, StyleSheet, TouchableNativeFeedback as Touchable, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
+import { View, Text, TextInput, Switch, StyleSheet, TouchableNativeFeedback as Touchable, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useApi, getRules } from '../api'
 import * as Svg from 'react-native-svg'
@@ -204,39 +204,50 @@ function RuleElement({ rule, onRemove }) {
     })
   }, [localRule])
 
+  const setName = useCallback((name: string) => {
+    setLocalRule({
+      ...localRule,
+      name
+    })
+  }, [localRule])
+
   console.log(localRule)
 
   return (
     <View style={styles.item} onLayout={({ nativeEvent: { layout: { width } } }) => setWidth(width - 2)}>
       <Touchable onPress={() => setEditing(!editing)}>
         <View collapsable={false}>
-      {/* Header of the rule view */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 4, position: 'relative', overflow: 'visible'}}>
-        <View style={{flex: 1, justifyContent: 'flex-start'}}>
-          <View style={{ flexDirection: 'row'}}>
-            <Text style={[styles.text, styles.name]}>{name}</Text>
-            <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} onPress={() => setEditing(!editing)} />
-          </View>
-          {!editing &&
-            <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
-          }
-          {editing &&
-            <View style={{ flexDirection: 'row'}}>
-              {
-                Object.keys(DayShortNames)
-                .map((day, i) => (
-                  <Touchable onPress={() => setDay(day as unknown as Day, !days[day])}>
-                    <Text style={[styles.text, { fontSize: 12, opacity: localRule.days[day] ? 1 : 0.4}]}>{DayShortNames[day]}{(i == Object.keys(DayShortNames).length - 1) ? '': ', '}</Text>
-                  </Touchable>
-                ))
-              }
+          {/* Header of the rule view */}
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 0, position: 'relative', overflow: 'visible'}}>
+            <View style={{flex: 1, justifyContent: 'flex-start'}}>
+              <View style={{ flexDirection: 'row'}}>
+                <TextInput editable={editing} onChangeText={(text) => setName(text)} style={[styles.text, styles.name]} value={name}/>
+                <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} onPress={() => setEditing(!editing)} />
+              </View>
             </View>
-          }
-        </View>
-        <Switch value={localRule.active} onValueChange={(value) => setActive(value)} />
-      </View>
-      {/* Time bar */}
-      <TimeBar schedules={schedules} width={width} height={18+4} padding={8} />
+            <Switch value={localRule.active} onValueChange={(value) => setActive(value)} />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 8, paddingBottom: 4, position: 'relative', overflow: 'visible'}}>
+            {!editing &&
+              <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
+            }
+            {editing &&
+              <View style={{ flexDirection: 'row'}}>
+                {
+                  Object.keys(DayShortNames)
+                  .map((day, i) => (
+                    <Touchable onPress={() => setDay(day as unknown as Day, !days[day])}>
+                      <View style={{ width: 24, height: 24, marginRight: 8, marginTop: 8, alignItems: 'center', justifyContent: 'center', borderColor: Colors.text.primary, borderWidth: 1, borderRadius: 12, opacity: localRule.days[day] ? 1 : 0.4 }}>
+                        <Text style={[styles.text, { fontSize: 12}]}>{DayShortNames[day].charAt(0)}</Text>
+                      </View>
+                    </Touchable>
+                  ))
+                }
+              </View>
+            }
+          </View>
+          {/* Time bar */}
+          <TimeBar schedules={schedules} width={width} height={18+4} padding={8} />
       { editing && (<>
         <View style={{ paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid' }}>
           { schedules.map((schedule, idx) => {
