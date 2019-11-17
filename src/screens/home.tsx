@@ -1,12 +1,14 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
+  KeyboardAvoidingView,
   RefreshControl
 } from 'react-native';
-import { getLatest, getList, useApiPolling, useApi } from '../api'
+// import {KeyboardAwareScrollView as ScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { getRules, getList, useApiPolling, useApi } from '../api'
 import { Dimensions as Dim } from 'react-native'
 
 import Colors from '../theme/colors'
@@ -31,42 +33,52 @@ const temp = {
   }
 }
 
+let addRule = () => {
+  console.log('add rule noop')
+}
+
 export function Home() {
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000)
+  let { data: rules } = useApi(getRules)
 
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
-  return (<View style={{ flex: 1}}>
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
-      { error &&
-        <Text style={styles.text}>An error occurred</Text>
-      }
-      { latestRecord &&
-        <TemperatureView record={latestRecord} />
-      }
-      { records &&
-        <RecordsChart records={records.items} />
-      }
-      <RuleList/>
-    </ScrollView>
-    <PlusButton onPress={() => {}}/>
-    </View>
+  return (
+    <KeyboardAvoidingView behavior={'position'}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
+        <View style={{ flex: null, width: '100%', }}>
+          { error &&
+            <Text style={styles.text}>An error occurred</Text>
+          }
+          { latestRecord &&
+            <TemperatureView record={latestRecord} />
+          }
+          { records &&
+            <RecordsChart records={records.items} />
+          }
+          <RuleList rules={rules} onReady={add => addRule = add} />
+        </View>
+      </ScrollView>
+      <PlusButton onPress={addRule}/>
+    </KeyboardAvoidingView>
   );
 }
 
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    height: Screen.height,
+    // flex: 1,
+    // height: Screen.height,
     // width: Screen.width,
     padding: Dimensions.padding,
     backgroundColor: Colors.background,
   },
   contentContainer: {
+    flex: null,
+    // width: '100%',
     width: Screen.width,
     // padding: Dimensions.padding,
     alignItems: 'center',

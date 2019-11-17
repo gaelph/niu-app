@@ -10,7 +10,7 @@ export default function PlusButton({ onPress }) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <IconButton name="plus" size={32} color='white' provider={Feather} onPress={onPress} />
+        <IconButton name="plus" size={24} color='white' provider={Feather} onPress={onPress} />
       </View>
     </View>
   )

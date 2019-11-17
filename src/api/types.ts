@@ -46,7 +46,7 @@ export const DayShortNames = {
 }
 
 export interface Rule {
-  id: string,
+  id?: string,
   name: string,
   active: boolean
   days: {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Switch, StyleSheet, TouchableNativeFeedback as Touchable, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useApi, getRules } from '../api'
@@ -127,9 +127,16 @@ async function openTimePicker(schedule, property) {
 function RuleElement({ rule, onRemove }) {
   let [localRule, setLocalRule] = useState<Rule>(rule);
   let [width, setWidth] = useState<number>(0)
-  let [editing, setEditing] = useState<boolean>(false)
+  let [editing, setEditing] = useState<boolean>(rule.id === undefined)
   
   const { name, days, schedules } = localRule
+
+  let inputRef = useRef<TextInput>()
+  useEffect(() => {
+    if (editing) {
+      inputRef.current && inputRef.current.focus()
+    }
+  }, [editing])
 
   const daysString = Object.keys(days)
   .filter(day => days[day])
@@ -221,7 +228,7 @@ function RuleElement({ rule, onRemove }) {
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 0, position: 'relative', overflow: 'visible'}}>
             <View style={{flex: 1, justifyContent: 'flex-start'}}>
               <View style={{ flexDirection: 'row'}}>
-                <TextInput editable={editing} onChangeText={(text) => setName(text)} style={[styles.text, styles.name]} value={name}/>
+                <TextInput ref={inputRef} editable={editing} placeholder={"Preset"} onChangeText={(text) => setName(text)} style={[styles.text, styles.name]} value={name}/>
                 <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} onPress={() => setEditing(!editing)} />
               </View>
             </View>
@@ -298,24 +305,49 @@ function RuleElement({ rule, onRemove }) {
   )
 }
 
-export default function RuleList() {
-  let { data } = useApi(getRules)
-  let [rules, setRules] = useState([] as Rule[])
+export default function RuleList({ rules, onReady }) {
+  let [localRules, setLocalRules] = useState([])
 
   useEffect(() => {
-    setRules(data ? data.items as Rule[] : [])
-  }, [data])
+    setLocalRules(rules ? rules.items as Rule[] : [])
+  }, [rules])
+
+  let add = useCallback(() => {
+    console.log('new rules')
+    setLocalRules([
+      ...localRules,
+      {
+        active: true,
+        name: "",
+        days: { 
+          [Day.Mon]: false,
+          [Day.Tue]: false,
+          [Day.Wed]: false,
+          [Day.Thu]: false,
+          [Day.Fri]: false,
+          [Day.Sat]: false,
+          [Day.Sun]: false,
+        },
+        schedules: []
+      }
+    ])
+  }, [localRules])
+
+  useEffect(() => {
+    console.log('rule ready')
+    onReady(add)
+  }, [localRules])
 
 
   let removeRule = useCallback((rid) => {
     console.log('removeRule', rid)
-    setRules(rules.filter(r => r.id !== rid))
-  }, [rules])
+    setLocalRules(localRules.filter(r => r.id !== rid))
+  }, [localRules])
 
   return (
     <View style={styles.container}>
       {
-        rules.map(rule => <RuleElement key={rule.id} rule={rule} onRemove={() => removeRule(rule.id)} />)
+        localRules.map(rule => <RuleElement key={rule.id} rule={rule} onRemove={() => removeRule(rule.id)} />)
       }
     </View>
   )
