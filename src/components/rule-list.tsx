@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, TextInput, Switch, StyleSheet, TouchableNativeFeedback as Touchable, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
+import { View, Text, TextInput, Switch, CheckBox, StyleSheet, TouchableNativeFeedback as Touchable, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useApi, getRules } from '../api'
 import * as Svg from 'react-native-svg'
@@ -99,9 +99,8 @@ function TimeBar({ schedules, width, height, padding }: TimeBarProps) {
       {schedules.map((s, i) => {
         const x = xForTime(s.from, width) + padding
         const w = xForTime(s.to, width) - x
-        return (<>
+        return (
           <Svg.Rect key={`${i}_rect`} x={x} y={18} width={w} height={4} fill={Colors.accent}>{s.from}</Svg.Rect>
-          </>
         )
       })}
     </Svg.G>
@@ -256,7 +255,7 @@ function RuleElement({ rule, onRemove }) {
                     </Touchable>
                   ))
                 }
-              </View>
+                </View>
                 <View style={{ flexDirection: 'row', flex: null, alignItems: 'center', justifyContent: 'flex-end', height: 24, marginTop: 8, }} collapsable={false}>
                   <Text style={{ color: 'gray' }}>Repeat</Text>
                   <CheckBox value={localRule.repeat} onValueChange={(value) => setRepeat(value)} />
@@ -270,7 +269,7 @@ function RuleElement({ rule, onRemove }) {
         <View style={{ paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid' }}>
           { schedules.map((schedule, idx) => {
             
-            return <View style={{ flexDirection: 'row', alignItems:'center', paddingVertical: 8 }}>
+            return <View key={`${rule.id}_${schedule.from}_${schedule.to}`} style={{ flexDirection: 'row', alignItems:'center', paddingVertical: 8 }}>
               <View style={{ flex: 1, flexDirection: 'row' }}>
                 <Touchable onPress={async () => {
                   let newSchedule = await openTimePicker(schedule, 'from')
@@ -369,7 +368,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingHorizontal: 30, 
     // paddingBottom: 54 + 24,
-    marginTop: 60,
+    marginTop: 40,
   },
   item: {
     borderBottomWidth: 1,

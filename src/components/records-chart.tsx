@@ -38,8 +38,6 @@ export default function RecordsChart({ records }) {
 
   useEffect(() => {
     let handler = ({ window, screen }) => {
-      console.log('window:', window)
-      console.log('screen:', screen)
       setWidth(window.width)
     }
 
@@ -64,9 +62,6 @@ export default function RecordsChart({ records }) {
 
     return [values, dates, bound]
   }, [records, width])
-
-  console.log('width: ' + width)
-  console.log('chartWidth:', chartWidth)
 
   return (
     <View style={{ paddingLeft: 30, marginTop: 20,/* height: 200, */ width }}>
