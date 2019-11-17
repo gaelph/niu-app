@@ -10,6 +10,10 @@ import Colors from '../theme/colors'
 
 import IconButton from '../components/icon-button'
 
+import {ToastAndroid} from 'react-native';
+import { AsyncStorage } from 'react-native'
+import uuid from 'uuid/v4'
+
 
 interface TimeBarProps {
   schedules: { from: string, to: string }[]
@@ -126,24 +130,47 @@ async function openTimePicker(schedule, property) {
 function RuleElement({ rule, onRemove }) {
   let [localRule, setLocalRule] = useState<Rule>(rule);
   let [width, setWidth] = useState<number>(0)
-  let [editing, setEditing] = useState<boolean>(rule.id === undefined)
+  let [editing, setEditing] = useState<boolean>(rule.name === undefined)
   
   const { name, days, schedules } = localRule
-
+  
   let inputRef = useRef<TextInput>()
   useEffect(() => {
     if (editing) {
       inputRef.current && inputRef.current.focus()
     }
   }, [editing])
-
+  
   const daysString = Object.keys(days)
   .filter(day => days[day])
   .map(day => DayShortNames[day])
   .join(', ')
+  
+  const isInitialMount = useRef(true);
+  let updateTimeout = useRef<number>() 
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      if (updateTimeout) {
+        clearTimeout(updateTimeout.current)
+      }
+
+      let t = setTimeout(async () => {
+        await AsyncStorage.setItem(`Rule_${localRule.id}`, JSON.stringify(localRule), error => {
+          if (error) { console.error(error) }
+
+          ToastAndroid.showWithGravity("Modifications saved", ToastAndroid.SHORT,
+          ToastAndroid.BOTTOM)
+        })
+
+        updateTimeout.current = t
+      }, 2000)
+    }
+  }, [localRule])
 
   const updateSchedule = useCallback((idx, schedule) => {
-    setLocalRule({
+    let update = {
       ...localRule,
       schedules: schedules.map((s, i) => {
         if (i === idx) {
@@ -152,21 +179,27 @@ function RuleElement({ rule, onRemove }) {
 
         return s
       })
-    })
+    }
+
+    setLocalRule(update)
   }, [localRule])
 
   const removeSchedule = useCallback((idx) => {
-    setLocalRule({
+    let update = {
       ...localRule,
       schedules: schedules.filter((_, i) => i !== idx)
-    })
+    }
+
+    setLocalRule(update)
   }, [localRule])
 
   const setActive = useCallback((active) => {
-    setLocalRule({
+    let update = {
       ...localRule,
       active
-    })
+    }
+
+    setLocalRule(update)
   }, [localRule])
 
   const addHours = useCallback(async () => {
@@ -326,8 +359,9 @@ export default function RuleList({ rules, onReady }) {
     setLocalRules([
       ...localRules,
       {
+        id: uuid(),
         active: true,
-        name: "",
+        name: undefined,
         days: { 
           [Day.Mon]: false,
           [Day.Tue]: false,
@@ -349,6 +383,13 @@ export default function RuleList({ rules, onReady }) {
 
   let removeRule = useCallback((rid) => {
     setLocalRules(localRules.filter(r => r.id !== rid))
+    AsyncStorage.removeItem(`Rule_${rid}`, () => {
+      ToastAndroid.showWithGravity(
+        "Rule removed",
+        ToastAndroid.SHORT,
+        ToastAndroid.BOTTOM
+      )
+    })
   }, [localRules])
 
   return (

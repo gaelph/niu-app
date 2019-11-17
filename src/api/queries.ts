@@ -77,7 +77,22 @@ export async function getList(cursor: ListCursor = DEFAULT_CURSOR): Promise<Curs
   }
 }
 
+import { AsyncStorage } from 'react-native'
 export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<CursoredList<Rule>> {
+  let AllKeys = await AsyncStorage.getAllKeys()
+
+  let RulesKeys = AllKeys.filter(key => key.startsWith("Rule_"))
+  console.log('found keys', RulesKeys)
+
+  let SavedRules = await AsyncStorage.multiGet(RulesKeys)
+
+  if (SavedRules.length > 0) {
+    console.log('returning saved rules')
+    return {
+      items: SavedRules.map(([_, s]) => JSON.parse(s)),
+      cursor
+    }
+  }
   return {
     items: [
       {
