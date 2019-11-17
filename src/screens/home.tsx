@@ -15,6 +15,7 @@ import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 import * as Support from '../support/dimensions'
 
+import AppBar from '../components/app-bar'
 import TemperatureView from '../components/temperature-view'
 import RecordsChart from '../components/records-chart'
 import RuleList from '../components/rule-list'
@@ -50,6 +51,7 @@ export function Home() {
         contentContainerStyle={styles.contentContainer}
         refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
         <View style={{ flex: null, width: '100%', }}>
+          <AppBar />
           { error &&
             <Text style={styles.text}>An error occurred</Text>
           }
@@ -82,7 +84,8 @@ const styles = StyleSheet.create({
     width: Screen.width,
     // padding: Dimensions.padding,
     alignItems: 'center',
-    paddingVertical: Dimensions.appBar.height + Support.statusBarHeight(),
+    paddingTop: Support.statusBarHeight(),
+    paddingBottom: Dimensions.appBar.height + Support.statusBarHeight(),
     justifyContent: 'flex-start',
   },
   text: {
