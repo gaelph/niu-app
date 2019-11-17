@@ -313,7 +313,6 @@ export default function RuleList({ rules, onReady }) {
   }, [rules])
 
   let add = useCallback(() => {
-    console.log('new rules')
     setLocalRules([
       ...localRules,
       {
@@ -334,13 +333,11 @@ export default function RuleList({ rules, onReady }) {
   }, [localRules])
 
   useEffect(() => {
-    console.log('rule ready')
     onReady(add)
   }, [localRules])
 
 
   let removeRule = useCallback((rid) => {
-    console.log('removeRule', rid)
     setLocalRules(localRules.filter(r => r.id !== rid))
   }, [localRules])
 

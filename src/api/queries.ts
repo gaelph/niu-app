@@ -53,7 +53,6 @@ const DEFAULT_CURSOR: ListCursor = {
 }
 
 export async function getList(cursor: ListCursor = DEFAULT_CURSOR): Promise<CursoredList<TemperatureRecord>> {
-  console.log('get list with cursor', cursor)
   let response = await fetch(Routes.List(cursor),
   {
     headers: {
@@ -65,7 +64,6 @@ export async function getList(cursor: ListCursor = DEFAULT_CURSOR): Promise<Curs
   const result: ListResponse = await handleResponse(response)
 
   if (result.success) {
-    console.log('received', result.data.length, 'records')
     return {
       items: result.data.map(d => new TemperatureRecord(d)),
       cursor : {
