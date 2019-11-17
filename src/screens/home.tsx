@@ -16,6 +16,7 @@ import * as Support from '../support/dimensions'
 import TemperatureView from '../components/temperature-view'
 import RecordsChart from '../components/records-chart'
 import RuleList from '../components/rule-list'
+import PlusButton from '../components/plus-button'
 
 import { TemperatureRecord } from '../api/models/temperature-record'
 
@@ -35,11 +36,11 @@ export function Home() {
 
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
-  return (
+  return (<View style={{ flex: 1}}>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
-      refreshControl={<RefreshControl colors={[Colors.foreground]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
+      refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
       { error &&
         <Text style={styles.text}>An error occurred</Text>
       }
@@ -51,6 +52,8 @@ export function Home() {
       }
       <RuleList/>
     </ScrollView>
+    <PlusButton onPress={() => {}}/>
+    </View>
   );
 }
 

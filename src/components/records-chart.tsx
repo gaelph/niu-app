@@ -87,7 +87,7 @@ const Line = ({ line }: { line?: any}) => (
   <Path
       key={'line'}
       d={line}
-      stroke={Colors.foreground}
+      stroke={Colors.text.primary}
       strokeWidth={2}
       fill={'none'}
   />

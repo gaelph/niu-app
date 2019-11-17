@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    color: Colors.foreground,
+    color: Colors.text.primary,
     fontFamily: 'Raleway-SemiBold'
   },
   tempView: {

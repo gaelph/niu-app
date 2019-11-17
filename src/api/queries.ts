@@ -119,8 +119,8 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
       },
       {
         id: '2',
-        name: 'Weekends',
-        active: true,
+        name: 'All day',
+        active: false,
         days: {
           [Day.Mon]: false,
           [Day.Tue]: false,
@@ -137,8 +137,8 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
       ,
       {
         id: '3',
-        name: 'Weekends',
-        active: true,
+        name: 'Saturday Night Fever',
+        active: false,
         days: {
           [Day.Mon]: false,
           [Day.Tue]: false,

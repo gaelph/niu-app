@@ -7,11 +7,14 @@ import { Rule, Day, DayShortNames } from '../api/types'
 
 import Colors from '../theme/colors'
 
+import PlusButton from '../components/plus-button'
+
 
 interface TimeBarProps {
   schedules: { from: string, to: string }[]
   width: number,
   height: number
+  padding: number
 }
 
 function timeAsMinutes(time: string): number {
@@ -28,57 +31,75 @@ function xForTime(time: string, width: number, margin: number = 0): number {
   let minutes = timeAsMinutes(time)
   let ratio = minutes / MINUTES_IN_DAY
 
-  if (minutes > timeAsMinutes("22:30") || minutes < timeAsMinutes("1:30")) {
-    return Math.round(ratio * (width - (2 * margin))) + margin
-  }
-
   return Math.round(ratio * width)
 }
 
-function TimeIndicator({ from, to, width, margin }) {
+function TimeIndicator({ from, to, width, margin, padding }) {
   let fromMinutes = timeAsMinutes(from)
   let toMinutes = timeAsMinutes(to)
 
+  let textAnchor = 'middle' as Svg.TextAnchor
+  let x = padding
   if (toMinutes - fromMinutes <= 3 * 60) {
     const center = fromMinutes + ((toMinutes - fromMinutes) / 2)
-    let ratio = center / MINUTES_IN_DAY
-
-    let x
-    if (center > timeAsMinutes("21:00") || center < timeAsMinutes("3:00")) {
-      x = (1.25 * margin) + Math.round(ratio * (width - 3 * margin))
+    
+    if (center > timeAsMinutes("22:20")) {
+      x = width
+      textAnchor = 'end'
+    } else if (center < timeAsMinutes("3:00")) {
+      textAnchor = 'start'
     } else {
-      x = Math.round(ratio * width)
+      let ratio = center / MINUTES_IN_DAY
+      x += Math.round(ratio * width)
     }
 
-    return <Svg.Text x={x} y={14} {...timeIndicatorStyle}>{`${from} - ${to}`}</Svg.Text>
+    return <Svg.Text x={x} y={14} {...timeIndicatorStyle} textAnchor={textAnchor}>{`${from} - ${to}`}</Svg.Text>
   } else {
+    let [[xFrom, anchorFrom], [xTo, anchorTo]] = [from, to].map(v => {
+      let minutes = timeAsMinutes(v)
+      let x = padding
+      let anchor = 'middle' as Svg.TextAnchor
+      if (minutes > timeAsMinutes("22:20")) {
+        x = width
+        anchor = 'end'
+      } else if (minutes < timeAsMinutes("3:00")) {
+        anchor = 'start'
+      } else {
+        let ratio = minutes / MINUTES_IN_DAY
+        x += Math.round(ratio * (width - x))
+      }    
+      
+      return [x, anchor as Svg.TextAnchor]
+    })
+
     return (<>
-      <Svg.Text x={xForTime(from, width, margin)} y={14}  {...timeIndicatorStyle}>{from}</Svg.Text>
-      <Svg.Text x={xForTime(to, width, margin)} y={14}  {...timeIndicatorStyle}>{to}</Svg.Text>
+      <Svg.Text x={xFrom} y={14} textAnchor={anchorFrom} {...timeIndicatorStyle}>{from}</Svg.Text>
+      <Svg.Text x={xTo} y={14} textAnchor={anchorTo} {...timeIndicatorStyle}>{to}</Svg.Text>
     </>)
   }
 }
 
 const timeIndicatorStyle = {
   opacity: 0.4,
-  textAnchor: 'middle' as Svg.TextAnchor,
   fontSize: 10,
 }
 
-function TimeBar({ schedules, width, height }: TimeBarProps) {
+function TimeBar({ schedules, width, height, padding }: TimeBarProps) {
+  width -= padding
+
   return <Svg.Svg width={width} height={height}>
     <Svg.G>
       {schedules.map((s, i) => {
-        return (<TimeIndicator key={`${i}_time`} from={s.from} to={s.to} width={width} margin={15} />
+        return (<TimeIndicator key={`${i}_time`} from={s.from} to={s.to} width={width} margin={15} padding={padding} />
         )
       })}
     </Svg.G>
     <Svg.G>
       {schedules.map((s, i) => {
-        const x = xForTime(s.from, width)
+        const x = xForTime(s.from, width) + padding
         const w = xForTime(s.to, width) - x
         return (<>
-          <Svg.Rect key={`${i}_rect`} x={xForTime(s.from, width)} y={16} width={w} height={4} fill={Colors.accent}>{s.from}</Svg.Rect>
+          <Svg.Rect key={`${i}_rect`} x={x} y={18} width={w} height={4} fill={Colors.accent}>{s.from}</Svg.Rect>
           </>
         )
       })}
@@ -97,14 +118,17 @@ function RuleElement({ rule }: { rule: Rule }) {
   return (
     <View style={styles.item} onLayout={({ nativeEvent: { layout: { width } } }) => setWidth(width - 2)}>
       {/* Header of the rule view */}
-      <View style={{ flexDirection: 'row', padding: 8, paddingBottom: 0 }}>
-        <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center'}}>
-          <Text style={[styles.text]}>{daysString}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 4 }}>
+        <View style={{flex: 1, justifyContent: 'flex-start'}}>
+          <Text style={[styles.text, styles.name]}>{rule.name}</Text>
+          <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
         </View>
         <Switch value={rule.active} />
       </View>
+        {/* <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', paddingHorizontal: 8 }}> */}
+        {/* </View> */}
       {/* Time bar */}
-      <TimeBar schedules={rule.schedules} width={width} height={16+4} />
+      <TimeBar schedules={rule.schedules} width={width} height={18+4} padding={8} />
     </View>
   )
 }
@@ -120,31 +144,37 @@ export default function RuleList() {
       {
         rules.map(rule => <RuleElement key={rule.id} rule={rule} />)
       }
+      
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
+    // position: 'relative',
     width: '100%',
     flex: 1,
     justifyContent: 'flex-start',
     paddingHorizontal: 30, 
+    // paddingBottom: 54 + 24,
     marginTop: 60,
   },
   item: {
-    borderWidth: 1,
-    borderColor: Colors.foreground,
+    borderBottomWidth: 1,
+    borderColor: Colors.border,
     borderStyle: 'solid',
-    borderRadius: 6,
+    borderRadius: 0,
     // padding: 8,
     paddingBottom: 0, 
     overflow: 'hidden',
-    marginBottom: 8
+    marginBottom: 16
   },
   text: {
-    color: Colors.foreground,
-    fontSize: 14,
+    color: Colors.text.primary,
+    fontSize: 20,
     fontFamily: 'Raleway-Bold'
   },
+  name: {
+    fontFamily: 'Raleway-MediumItalic'
+  }
 })
