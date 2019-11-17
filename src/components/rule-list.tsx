@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, Switch, StyleSheet } from 'react-native'
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, Switch, StyleSheet, TouchableNativeFeedback as Touchable, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
+import { Feather } from '@expo/vector-icons'
 import { useApi, getRules } from '../api'
 import * as Svg from 'react-native-svg'
 
@@ -7,7 +8,7 @@ import { Rule, Day, DayShortNames } from '../api/types'
 
 import Colors from '../theme/colors'
 
-import PlusButton from '../components/plus-button'
+import IconButton from '../components/icon-button'
 
 
 interface TimeBarProps {
@@ -107,44 +108,204 @@ function TimeBar({ schedules, width, height, padding }: TimeBarProps) {
   </Svg.Svg>
 }
 
-function RuleElement({ rule }: { rule: Rule }) {
-  const daysString = Object.keys(rule.days)
-  .filter(day => rule.days[day])
+async function openTimePicker(schedule, property) {
+  let [hours, minutes] = schedule[property].split(':')
+  let {action, hour, minute} = await TimePickerAndroid.open({
+    hour: parseInt(hours, 10),
+    minute: parseInt(minutes, 10),
+    is24Hour: true
+  }) as TimePickerAndroidTimeSetAction
+
+  if (action == TimePickerAndroid.timeSetAction) {
+    return {
+      ...schedule,
+      [property]: `${hour}:${minute.toString().padStart(2, '0')}`
+    }
+  }
+}
+
+function RuleElement({ rule, onRemove }) {
+  let [localRule, setLocalRule] = useState<Rule>(rule);
+  let [width, setWidth] = useState<number>(0)
+  let [editing, setEditing] = useState<boolean>(false)
+  
+  const { name, days, schedules } = localRule
+
+  const daysString = Object.keys(days)
+  .filter(day => days[day])
   .map(day => DayShortNames[day])
   .join(', ')
 
-  let [width, setWidth] = useState<number>(0)
+  const updateSchedule = useCallback((idx, schedule) => {
+    setLocalRule({
+      ...localRule,
+      schedules: schedules.map((s, i) => {
+        if (i === idx) {
+          return schedule
+        }
+
+        return s
+      })
+    })
+  }, [localRule])
+
+  const removeSchedule = useCallback((idx) => {
+    setLocalRule({
+      ...localRule,
+      schedules: schedules.filter((_, i) => i !== idx)
+    })
+  }, [localRule])
+
+  const setActive = useCallback((active) => {
+    setLocalRule({
+      ...localRule,
+      active
+    })
+  }, [localRule])
+
+  const addHours = useCallback(async () => {
+    let now = new Date();
+    let h = now.getHours();
+    let mm = now.getMinutes();
+
+    let schedule = {
+      from: `${h}:${mm.toString().padStart(2, '0')}`,
+      to: `${h}:${mm.toString().padStart(2, '0')}`
+    }
+    schedule = await openTimePicker(schedule, 'from')
+
+    if (schedule) {
+      schedule = await openTimePicker(schedule, 'to')
+
+      if (schedule) {
+        setLocalRule({
+          ...localRule,
+          schedules: [
+            ...localRule.schedules,
+            schedule
+          ].sort((a, b) => {
+            let afrom = timeAsMinutes(a.from)
+            let bfrom = timeAsMinutes(b.from)
+            return afrom - bfrom
+          })
+        })
+      }
+    }
+
+  }, [localRule])
+
+  const setDay = useCallback((day: Day, active: boolean) => {
+    setLocalRule({
+      ...localRule,
+      days: {
+        ...localRule.days,
+        [day]: active
+      }
+    })
+  }, [localRule])
+
+  console.log(localRule)
 
   return (
     <View style={styles.item} onLayout={({ nativeEvent: { layout: { width } } }) => setWidth(width - 2)}>
+      <Touchable onPress={() => setEditing(!editing)}>
+        <View collapsable={false}>
       {/* Header of the rule view */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 4, position: 'relative', overflow: 'visible'}}>
         <View style={{flex: 1, justifyContent: 'flex-start'}}>
-          <Text style={[styles.text, styles.name]}>{rule.name}</Text>
-          <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
+          <View style={{ flexDirection: 'row'}}>
+            <Text style={[styles.text, styles.name]}>{name}</Text>
+            <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} onPress={() => setEditing(!editing)} />
+          </View>
+          {!editing &&
+            <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
+          }
+          {editing &&
+            <View style={{ flexDirection: 'row'}}>
+              {
+                Object.keys(DayShortNames)
+                .map((day, i) => (
+                  <Touchable onPress={() => setDay(day as unknown as Day, !days[day])}>
+                    <Text style={[styles.text, { fontSize: 12, opacity: localRule.days[day] ? 1 : 0.4}]}>{DayShortNames[day]}{(i == Object.keys(DayShortNames).length - 1) ? '': ', '}</Text>
+                  </Touchable>
+                ))
+              }
+            </View>
+          }
         </View>
-        <Switch value={rule.active} />
+        <Switch value={localRule.active} onValueChange={(value) => setActive(value)} />
       </View>
-        {/* <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', paddingHorizontal: 8 }}> */}
-        {/* </View> */}
       {/* Time bar */}
-      <TimeBar schedules={rule.schedules} width={width} height={18+4} padding={8} />
+      <TimeBar schedules={schedules} width={width} height={18+4} padding={8} />
+      { editing && (<>
+        <View style={{ paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid' }}>
+          { schedules.map((schedule, idx) => {
+            
+            return <View style={{ flexDirection: 'row', alignItems:'center', paddingVertical: 8 }}>
+              <View style={{ flex: 1, flexDirection: 'row' }}>
+                <Touchable onPress={async () => {
+                  let newSchedule = await openTimePicker(schedule, 'from')
+                  newSchedule && updateSchedule(idx, newSchedule)
+                }}>
+                  <View>
+                    <Text style={styles.timeSelector}>{schedule.from}</Text>
+                  </View>
+                </Touchable>
+                <Text style={styles.timeSelector}>-</Text>
+                <Touchable onPress={async () => {
+                  let newSchedule = await openTimePicker(schedule, 'to')
+                  newSchedule && updateSchedule(idx, newSchedule)
+                }}>
+                  <View>
+                    <Text style={styles.timeSelector}>{schedule.to}</Text>
+                  </View>
+                </Touchable>
+              </View>
+              <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />
+            </View>
+          })}
+        </View>
+        <View style={{ flexDirection: 'row', paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid'}}>
+          <Touchable onPress={() => addHours()}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}>
+              <IconButton name="plus" size={16} color="gray" provider={Feather} />
+              <Text style={{ color: 'gray', marginLeft: 8 }}>Add hours</Text>
+            </View>
+          </Touchable>
+          <Touchable onPress={() => onRemove()}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingVertical: 8 }}>
+              <IconButton name="trash-2" size={16} color="gray" provider={Feather} />
+              <Text style={{ color: 'gray', marginLeft: 8 }}>Delete</Text>
+            </View>
+          </Touchable>
+        </View>
+      </>)}
+      </View>
+      
+      </Touchable>
     </View>
   )
 }
 
 export default function RuleList() {
   let { data } = useApi(getRules)
-  let rules = (data ? data.items : []) as Rule[]
+  let [rules, setRules] = useState([] as Rule[])
 
-  console.log(rules)
+  useEffect(() => {
+    setRules(data ? data.items as Rule[] : [])
+  }, [data])
+
+
+  let removeRule = useCallback((rid) => {
+    console.log('removeRule', rid)
+    setRules(rules.filter(r => r.id !== rid))
+  }, [rules])
 
   return (
     <View style={styles.container}>
       {
-        rules.map(rule => <RuleElement key={rule.id} rule={rule} />)
+        rules.map(rule => <RuleElement key={rule.id} rule={rule} onRemove={() => removeRule(rule.id)} />)
       }
-      
     </View>
   )
 }
@@ -166,8 +327,9 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     // padding: 8,
     paddingBottom: 0, 
-    overflow: 'hidden',
-    marginBottom: 16
+    overflow: 'visible',
+    marginBottom: 16,
+    position: 'relative',
   },
   text: {
     color: Colors.text.primary,
@@ -175,6 +337,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Raleway-Bold'
   },
   name: {
-    fontFamily: 'Raleway-MediumItalic'
+    fontFamily: 'Raleway-MediumItalic',
+    marginRight: 4
+  },
+  timeSelector: {
+    fontSize: 34,
+    fontFamily: 'Raleway-Light',
+    color: 'grey'
   }
 })

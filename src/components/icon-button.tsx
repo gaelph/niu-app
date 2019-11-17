@@ -15,11 +15,19 @@ interface IconButtonProps extends IconProviderProps {
 
 export default function IconButton({ provider, onPress, style, ...props }: IconButtonProps): ReactElement {
   const Provider = provider
-  return (
-    <Touchable onPress={onPress} useForeground background={Touchable.SelectableBackgroundBorderless()}>
+  if (onPress) {
+    return (
+      <Touchable onPress={onPress} useForeground background={Touchable.SelectableBackgroundBorderless()}>
+        <View style={style}>
+          <Provider {...props} />
+        </View>
+      </Touchable>
+    )
+  } else {
+    return (
       <View style={style}>
         <Provider {...props} />
       </View>
-    </Touchable>
-  )
+    )
+  }
 }
