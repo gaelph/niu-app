@@ -39,7 +39,7 @@ export default function RecordsChart({ records }) {
 
 
   const [values, dates, bound] = useMemo(() => {
-    records = records.reverse()
+    records = records.sort((a, b) => +b.createdOn - +a.createdOn)
     let latest = records[records.length - 1].createdOn
     let recent = records
     .filter((r => +latest - +r.createdOn < 8 * 60 * 60 * 1000))
