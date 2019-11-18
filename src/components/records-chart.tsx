@@ -10,6 +10,7 @@ import { TemperatureRecord } from '../api/models/temperature-record'
 
 import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
+import { useDimensions } from '../support'
 
 
 
@@ -33,18 +34,9 @@ const Line = ({ line }: { line?: any}) => (
 )
 
 export default function RecordsChart({ records }) {
-  const [width, setWidth] = useState(Dim.get('window').width)
+  const { width } = useDimensions('window')
   const chartWidth = width - 2 * Dimensions.padding
 
-  useEffect(() => {
-    let handler = ({ window, screen }) => {
-      setWidth(window.width)
-    }
-
-    Dim.addEventListener('change', handler)
-
-    return () => Dim.removeEventListener('change', handler)
-  }, [])
 
   const [values, dates, bound] = useMemo(() => {
     records = records.reverse()

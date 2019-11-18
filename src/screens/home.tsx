@@ -12,7 +12,7 @@ import { Dimensions as Dim } from 'react-native'
 
 import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
-import * as Support from '../support/dimensions'
+import { StatusBar, useDimensions } from '../support/dimensions'
 
 import AppBar from '../components/app-bar'
 import TemperatureView from '../components/temperature-view'
@@ -37,17 +37,7 @@ let addRule = () => {
 }
 
 export function Home() {
-  let [Screen, setScreen] = useState(Dim.get('window'))
-
-  useEffect(() => {
-    let handler = ({ window }) => {
-      setScreen(window)
-    }
-
-    Dim.addEventListener("change", handler)
-
-    return () => Dim.removeEventListener("change", handler)
-  }, [])
+  let Screen = useDimensions('window')
 
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000)
   let { data: rules } = useApi(getRules)
@@ -59,7 +49,7 @@ export function Home() {
       <ScrollView
         style={styles.container}
         contentContainerStyle={[styles.contentContainer, { width: Screen.width }]}
-        refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + Support.statusBarHeight()} />}>
+        refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + StatusBar.height} />}>
         <View style={{ flex: null, width: '100%', }}>
           <AppBar />
           { error &&
@@ -94,8 +84,8 @@ const styles = StyleSheet.create({
     width: Screen.width,
     // padding: Dimensions.padding,
     alignItems: 'center',
-    paddingTop: Support.statusBarHeight(),
-    paddingBottom: Dimensions.appBar.height + Support.statusBarHeight(),
+    paddingTop: StatusBar.height,
+    paddingBottom: Dimensions.appBar.height + StatusBar.height,
     justifyContent: 'flex-start',
   },
   text: {

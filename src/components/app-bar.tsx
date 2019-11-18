@@ -1,25 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Dimensions as Dim } from 'react-native'
 import { Feather } from '@expo/vector-icons'
-import * as Support from '../support/dimensions'
 
 import IconButton from './icon-button'
 
 import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
+import { useDimensions } from '../support'
 
 export default function AppBar() {
-  let [Screen, setScreen] = useState(Dim.get('window'))
-
-  useEffect(() => {
-    let handler = ({ window }) => {
-      setScreen(window)
-    }
-
-    Dim.addEventListener("change", handler)
-
-    return () => Dim.removeEventListener("change", handler)
-  }, [])
+  let Screen = useDimensions('window')
 
   return (
     <View style={[styles.container, { width: Screen.width }]}>
