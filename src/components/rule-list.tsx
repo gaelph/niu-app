@@ -127,7 +127,7 @@ async function openTimePicker(schedule, property) {
   }
 }
 
-function RuleElement({ rule, onRemove }) {
+function RuleElement({ rule, onRemove, onEdit }) {
   let [localRule, setLocalRule] = useState<Rule>(rule);
   let [width, setWidth] = useState<number>(0)
   let [editing, setEditing] = useState<boolean>(rule.name === undefined)
@@ -138,6 +138,7 @@ function RuleElement({ rule, onRemove }) {
   useEffect(() => {
     if (editing) {
       inputRef.current && inputRef.current.focus()
+      onEdit && onEdit(inputRef)
     }
   }, [editing])
   
@@ -160,8 +161,10 @@ function RuleElement({ rule, onRemove }) {
         await AsyncStorage.setItem(`Rule_${localRule.id}`, JSON.stringify(localRule), error => {
           if (error) { console.error(error) }
 
-          ToastAndroid.showWithGravity("Modifications saved", ToastAndroid.SHORT,
-          ToastAndroid.BOTTOM)
+          ToastAndroid.show("Modifications saved",
+          ToastAndroid.SHORT,
+          // ToastAndroid.BOTTOM
+          )
         })
 
         updateTimeout.current = t
@@ -348,7 +351,7 @@ function RuleElement({ rule, onRemove }) {
   )
 }
 
-export default function RuleList({ rules, onReady }) {
+export default function RuleList({ rules, onReady, onEdit }) {
   let [localRules, setLocalRules] = useState([])
 
   useEffect(() => {
@@ -384,10 +387,10 @@ export default function RuleList({ rules, onReady }) {
   let removeRule = useCallback((rid) => {
     setLocalRules(localRules.filter(r => r.id !== rid))
     AsyncStorage.removeItem(`Rule_${rid}`, () => {
-      ToastAndroid.showWithGravity(
+      ToastAndroid.show(
         "Rule removed",
         ToastAndroid.SHORT,
-        ToastAndroid.BOTTOM
+        // ToastAndroid.BOTTOM
       )
     })
   }, [localRules])
@@ -395,7 +398,7 @@ export default function RuleList({ rules, onReady }) {
   return (
     <View style={styles.container}>
       {
-        localRules.map(rule => <RuleElement key={rule.id} rule={rule} onRemove={() => removeRule(rule.id)} />)
+        localRules.map(rule => <RuleElement key={rule.id} rule={rule} onRemove={() => removeRule(rule.id)} onEdit={onEdit} />)
       }
     </View>
   )

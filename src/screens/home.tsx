@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -38,16 +38,24 @@ let addRule = () => {
 
 export function Home() {
   let Screen = useDimensions('window')
+  let scrollview = useRef<ScrollView>()
 
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000)
   let { data: rules } = useApi(getRules)
 
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
+  const onEdit = useCallback(inputRef => {
+    inputRef.current.measure((x, y, _w, _h, px, py) => {
+    scrollview.current.scrollTo({ x, y: py, animated: true })
+    })
+  }, [scrollview])
+
   return (
-    <KeyboardAvoidingView behavior={'position'}>
+    <KeyboardAvoidingView behavior={'padding'} style={{ width: Screen.width, height: Screen.height }}>
       <ScrollView
-        style={styles.container}
+        ref={scrollview}
+        style={[styles.container, { width: Screen.width, height: Screen.height }]}
         contentContainerStyle={[styles.contentContainer, { width: Screen.width }]}
         refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={loading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + StatusBar.height} />}>
         <View style={{ flex: null, width: '100%', }}>
@@ -61,7 +69,7 @@ export function Home() {
           { records &&
             <RecordsChart records={records.items} />
           }
-          <RuleList rules={rules} onReady={add => addRule = add} />
+          <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} />
         </View>
       </ScrollView>
       <PlusButton onPress={addRule}/>
@@ -73,6 +81,11 @@ export function Home() {
 const styles = StyleSheet.create({
   container: {
     // flex: 1,
+    // position: 'absolute',
+    // top: 0,
+    // bottom: 0,
+    // left: 0,
+    // right: 0,
     // height: Screen.height,
     // width: Screen.width,
     padding: Dimensions.padding,
