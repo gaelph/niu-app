@@ -17,7 +17,7 @@ export enum ApiActions {
   Error
 }
 
-export function reducer<T>(): [React.Reducer<ApiReducerState<T>, Action<T | Error>>, ApiReducerState<T>] {
+export function reducer<T>(): [React.Reducer<ApiReducerState<T>, Action<T | Error | boolean>>, ApiReducerState<T>] {
   const defaultState: ApiReducerState<T> = {
     data: null,
     error: null,
@@ -28,17 +28,17 @@ export function reducer<T>(): [React.Reducer<ApiReducerState<T>, Action<T | Erro
 }
 
 
-function apiReducer<T>(state: ApiReducerState<T>, action: Action<T | Error>): ApiReducerState<T> {
+function apiReducer<T>(state: ApiReducerState<T>, action: Action<T | Error | boolean>): ApiReducerState<T> {
   switch (action.type) {
     case ApiActions.Fetching:
       return {
         ...state,
-        loading: true
+        loading: action.payload as boolean
       }
     case ApiActions.Fetched:
       return {
         ...state,
-        loading: false,
+        // loading: false,
         data: action.payload as T
       };
     case ApiActions.Error:
