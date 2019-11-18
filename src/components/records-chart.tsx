@@ -56,7 +56,7 @@ export default function RecordsChart({ records }) {
   }, [records, width])
 
   return (
-    <View style={{ paddingLeft: 30, marginTop: 20,/* height: 200, */ width }}>
+    <View style={{ paddingLeft: 30, marginTop: 20, width }}>
       <View style={{ flexDirection: 'row', flex: 1 }}>
         <AreaChart
           style={{ height: 110, width: chartWidth }}
