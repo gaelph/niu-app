@@ -59,5 +59,5 @@ export interface Rule {
     [Day.Sun]: boolean,
   },
   repeat: boolean,
-  schedules: { from: string, to: string }[]
+  schedules: { from: string, to: string, high: number }[]
 }

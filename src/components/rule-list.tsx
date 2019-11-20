@@ -9,6 +9,7 @@ import { Rule, Day, DayShortNames } from '../api/types'
 import Colors from '../theme/colors'
 
 import IconButton from '../components/icon-button'
+import TemperatureSetModal from '../components/temperature-set-modal'
 
 import {ToastAndroid} from 'react-native';
 import { AsyncStorage } from 'react-native'
@@ -131,6 +132,7 @@ function RuleElement({ rule, onRemove, onEdit }) {
   let [localRule, setLocalRule] = useState<Rule>(rule);
   let [width, setWidth] = useState<number>(0)
   let [editing, setEditing] = useState<boolean>(rule.name === undefined)
+  let [modalVisible, setModalVisible] = useState<boolean>(false)
   
   const { name, days, schedules } = localRule
   
@@ -148,27 +150,19 @@ function RuleElement({ rule, onRemove, onEdit }) {
   .join(', ')
   
   const isInitialMount = useRef(true);
-  let updateTimeout = useRef<number>() 
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
     } else {
-      if (updateTimeout) {
-        clearTimeout(updateTimeout.current)
-      }
-
-      let t = setTimeout(async () => {
-        await AsyncStorage.setItem(`Rule_${localRule.id}`, JSON.stringify(localRule), error => {
+      let handler = setTimeout(() => {
+        AsyncStorage.setItem(`Rule_${localRule.id}`, JSON.stringify(localRule), error => {
           if (error) { console.error(error) }
 
-          ToastAndroid.show("Modifications saved",
-          ToastAndroid.SHORT,
-          // ToastAndroid.BOTTOM
-          )
+          ToastAndroid.show("Modifications saved", ToastAndroid.SHORT)
         })
+      }, 1000)
 
-        updateTimeout.current = t
-      }, 2000)
+      return () => clearTimeout(handler)
     }
   }, [localRule])
 
@@ -212,7 +206,8 @@ function RuleElement({ rule, onRemove, onEdit }) {
 
     let schedule = {
       from: `${h}:${mm.toString().padStart(2, '0')}`,
-      to: `${h}:${mm.toString().padStart(2, '0')}`
+      to: `${h}:${mm.toString().padStart(2, '0')}`,
+      high: 20, low: 16
     }
     schedule = await openTimePicker(schedule, 'from')
 
@@ -325,6 +320,12 @@ function RuleElement({ rule, onRemove, onEdit }) {
                   </View>
                 </Touchable>
               </View>
+              <TemperatureSetModal visible={modalVisible} value={schedule} onClose={() => setModalVisible(false)} onValueChange={(value) => { updateSchedule(idx, {...schedule, ...value}); setModalVisible(false) }}/>
+              <Touchable onPress={() => setModalVisible(true)}>
+                <View style={{ alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 20 }}>
+                  <Text style={[styles.smallText, { color: Colors.accent }]}>{schedule.high || 20}˚</Text>
+                </View>
+              </Touchable>
               <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />
             </View>
           })}
@@ -429,6 +430,11 @@ const styles = StyleSheet.create({
     color: Colors.text.primary,
     fontSize: 20,
     fontFamily: 'Raleway-Bold'
+  },
+  smallText: {
+    color: Colors.text.primary,
+    fontSize: 24,
+    fontFamily: 'Raleway-Regular'
   },
   name: {
     fontFamily: 'Raleway-MediumItalic',

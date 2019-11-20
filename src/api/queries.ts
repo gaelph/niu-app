@@ -89,7 +89,19 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
   if (SavedRules.length > 0) {
     console.log('returning saved rules')
     return {
-      items: SavedRules.map(([_, s]) => JSON.parse(s)),
+      items: SavedRules.map(([_, s]) => {
+        let r = JSON.parse(s)
+
+        r.schedules = r.schedules.map(s => {
+          if (!s.high) {
+            s.high = 20
+          }
+
+          return s
+        })
+
+        return r
+      }),
       cursor
     }
   }
@@ -110,8 +122,8 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
         },
         repeat: true,
         schedules: [
-          { from: '6:15', to: '8:00' },
-          { from: '18:15', to: '22:30' },
+          { from: '6:15', to: '8:00', high: 20 },
+          { from: '18:15', to: '22:30', high: 20 },
         ],
       },
       {
@@ -129,7 +141,7 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
         },
         repeat: true,
         schedules: [
-          { from: '8:05', to: '22:00' },
+          { from: '8:05', to: '22:00', high: 20 },
         ],
       },
       {
@@ -147,7 +159,7 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
         },
         repeat: false,
         schedules: [
-          { from: '0:00', to: '23:59' },
+          { from: '0:00', to: '23:59', high: 20 },
         ],
       }
       ,
@@ -166,8 +178,8 @@ export async function getRules(cursor: ListCursor = DEFAULT_CURSOR): Promise<Cur
         },
         repeat: false,
         schedules: [
-          { from: '0:10', to: '1:33' },
-          { from: '22:30', to: '23:59' },
+          { from: '0:10', to: '1:33', high: 20 },
+          { from: '22:30', to: '23:59', high: 2 },
         ],
       }
     ],
