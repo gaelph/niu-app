@@ -86,10 +86,13 @@ export default function RecordsChart({ records }) {
       </View>
       <XAxis data={values} numberOfTicks={3} formatLabel={(v) => {
         let date = dates[v];
-        let h = date.getHours();
-        let m = date.getMinutes();
 
-        return `${h}h${m.toString().padStart(2, '0')}`
+        if (date) {
+          let h = date.getHours();
+          let m = date.getMinutes();
+
+          return `${h}h${m.toString().padStart(2, '0')}`
+        }
       }}
         style={{ marginTop: 8}}
         contentInset={{ left: 12, right: 42}}
