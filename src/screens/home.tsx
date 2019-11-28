@@ -1,13 +1,14 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   KeyboardAvoidingView,
-  RefreshControl
+  RefreshControl,
+  ToastAndroid,
 } from 'react-native';
-import { getRules, getList, useApiPolling, useApi } from '../api'
+import { getRules, getList, createRule, updateRule, deleteRule, useApiPolling, useApi, useMutation, } from '../api'
 import { Dimensions as Dim } from 'react-native'
 
 import Colors from '../theme/colors'
@@ -17,10 +18,11 @@ import { StatusBar, useDimensions } from '../support/dimensions'
 import AppBar from '../components/app-bar'
 import TemperatureView from '../components/temperature-view'
 import RecordsChart from '../components/records-chart'
-import RuleList from '../components/rule-list'
 import PlusButton from '../components/plus-button'
+import Rules from '../components/rule/list'
 
 import { TemperatureRecord } from '../api/models/temperature-record'
+import { Rule } from '../api/models/rule'
 
 const Screen = Dim.get('window')
 
@@ -41,13 +43,78 @@ export function Home() {
   let scrollview = useRef<ScrollView>()
 
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000)
-  let { data: rules } = useApi(getRules)
-
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
-  const onEdit = useCallback(inputRef => {
-    inputRef.current.measure((x, y, _w, _h, px, py) => {
-    scrollview.current.scrollTo({ x, y: py, animated: true })
+  let [rules, setRules] = useState([])
+  
+  useEffect(() => {
+    getRules()
+    .then(({ items: data }) => {
+      setRules(data)
+    })
+  }, [])
+
+  let addRuleMutation = useMutation<Rule, Rule>(createRule)
+  let updateRuleMutation = useMutation<Partial<Rule>, Rule>(updateRule)
+  let deleteRuleMutation = useMutation<Rule, void>(deleteRule)
+
+  let showErrorMessage = useCallback(() => {
+    ToastAndroid.show('An error occurred', ToastAndroid.SHORT)
+  }, [])
+
+  let showSuccessMessage = useCallback(() => {
+    ToastAndroid.show('Saved changes', ToastAndroid.SHORT)
+  }, [])
+
+  let showMessage = useCallback((error) => {
+    if (error) {
+      showErrorMessage()
+      console.error(error)
+    } else {
+      showSuccessMessage()
+    }
+  }, [])
+
+  let addRule = useCallback(() => {
+    let rule = Rule.default()
+    setRules([...rules, rule])
+    let { error } = addRuleMutation(rule)
+
+    showMessage(error)
+  }, [rules])
+
+  let changeRule = useCallback((partialRule) => {
+    let { id } = partialRule
+
+    setRules(rules.map(rule => {
+      if (rule.id === id) {
+        return {
+          ...rule,
+          ...partialRule
+        }
+      }
+
+      return rule
+    }))
+
+    let { error } = updateRuleMutation(partialRule)
+
+    showMessage(error)
+  }, [rules])
+
+  let removeRule = useCallback((rule) => {
+    setRules(rules.filter(({ id }) => id !== rule.id))
+
+    let { error } = deleteRuleMutation(rule)
+
+    showMessage(error)
+  }, [rules])
+
+  const scrollToRef = useCallback(inputRef => {
+    inputRef.current.measure((x, _y, _w, _h, _px, py) => {
+      setTimeout(() => {
+        scrollview.current.scrollTo({ x, y: py - StatusBar.height, animated: true })
+      }, 10)
     })
   }, [scrollview])
 
@@ -69,7 +136,8 @@ export function Home() {
           { records &&
             <RecordsChart records={records.items} />
           }
-          <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} />
+          <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} />
+          {/* <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} /> */}
         </View>
       </ScrollView>
       <PlusButton onPress={addRule}/>

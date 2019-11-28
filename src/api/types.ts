@@ -1,3 +1,6 @@
+import Time from '../support/time'
+import uuid from 'uuid/v4'
+
 export interface TemperatureRecordEntity {
   id: number;
   value: number;
@@ -11,19 +14,28 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-export type GetLatestResponse = ApiResponse<TemperatureRecordEntity>;
-export type ListResponse = ApiResponse<TemperatureRecordEntity[]>;
+export type ListResponse<T> = ApiResponse<T[]>;
 
 export interface CursoredList<T> {
   items: T[];
   cursor: ListCursor
 }
 
-export interface ListCursor {
-  page: number,
+export class ListCursor {
+  page: number
   pageSize: number
-}
 
+  constructor(page = 1, pageSize = 100) {
+    this.page = page,
+    this.pageSize = pageSize
+  }
+
+  static DEFAULT = new ListCursor(1, 100)
+
+  next(): ListCursor {
+    return new ListCursor(this.page + 1, this.pageSize)
+  }
+}
 
 export enum Day {
   Mon,
@@ -45,10 +57,41 @@ export const DayShortNames = {
   [Day.Sun]: "Sun",
 }
 
-export interface Rule {
+export const DayFromNumber = {
+  "mon": DayShortNames[Day.Mon],
+  "tue": DayShortNames[Day.Tue],
+  "wed": DayShortNames[Day.Wed],
+  "thu": DayShortNames[Day.Thu],
+  "fri": DayShortNames[Day.Fri],
+  "sat": DayShortNames[Day.Sat],
+  "sun": DayShortNames[Day.Sun],
+}
+
+export const dayToInt = {
+  "mon": 0,
+  "tue": 1,
+  "wed": 2,
+  "thu": 3,
+  "fri": 4,
+  "sat": 5,
+  "sun": 6,
+  "Mon": 0,
+  "Tue": 1,
+  "Wed": 2,
+  "Thu": 3,
+  "Fri": 4,
+  "Sat": 5,
+  "Sun": 6,
+
+}
+
+export const sortDays = (a, b) => dayToInt[a] - dayToInt[b]
+
+export type RuleEntity = {
   id?: string,
   name: string,
-  active: boolean
+  active: boolean,
+  repeat: boolean,
   days: {
     [Day.Mon]: boolean,
     [Day.Tue]: boolean,
@@ -57,7 +100,6 @@ export interface Rule {
     [Day.Fri]: boolean,
     [Day.Sat]: boolean,
     [Day.Sun]: boolean,
-  },
-  repeat: boolean,
+  }
   schedules: { from: string, to: string, high: number }[]
 }

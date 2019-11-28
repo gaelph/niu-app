@@ -4,126 +4,36 @@ import { Feather } from '@expo/vector-icons'
 import { useApi, getRules } from '../api'
 import * as Svg from 'react-native-svg'
 
-import { Rule, Day, DayShortNames } from '../api/types'
+import { Day, DayShortNames } from '../api/types'
+import { Rule, Schedule } from '../api/models/rule'
 
 import Colors from '../theme/colors'
+import Time from '../support/time'
 
 import IconButton from '../components/icon-button'
-import TemperatureSetModal from '../components/temperature-set-modal'
+import TemperatureSetter from '../components/temperature-set-modal'
+import TimeBar from '../components/time-bar'
+import ActionButton from '../components/action-button'
 
-import {ToastAndroid} from 'react-native';
+import {ToastAndroid} from 'react-native'
 import { AsyncStorage } from 'react-native'
 import uuid from 'uuid/v4'
 
+import { Header, DaySelector, RepeatCheckBox, TimeSelector } from './rule/item'
 
-interface TimeBarProps {
-  schedules: { from: string, to: string }[]
-  width: number,
-  height: number
-  padding: number
-}
 
-function timeAsMinutes(time: string): number {
-  const [hoursString, minutesString] = time.split(':')
-  const hours = parseInt(hoursString, 10)
-  const minutes = parseInt(minutesString, 10)
-
-  return hours * 60 + minutes
-}
-
-const MINUTES_IN_DAY = 24 * 60
-
-function xForTime(time: string, width: number, margin: number = 0): number {
-  let minutes = timeAsMinutes(time)
-  let ratio = minutes / MINUTES_IN_DAY
-
-  return Math.round(ratio * width)
-}
-
-function TimeIndicator({ from, to, width, margin, padding }) {
-  let fromMinutes = timeAsMinutes(from)
-  let toMinutes = timeAsMinutes(to)
-
-  let textAnchor = 'middle' as Svg.TextAnchor
-  let x = padding
-  if (toMinutes - fromMinutes <= 3 * 60) {
-    const center = fromMinutes + ((toMinutes - fromMinutes) / 2)
-    
-    if (center > timeAsMinutes("22:20")) {
-      x = width
-      textAnchor = 'end'
-    } else if (center < timeAsMinutes("3:00")) {
-      textAnchor = 'start'
-    } else {
-      let ratio = center / MINUTES_IN_DAY
-      x += Math.round(ratio * width)
-    }
-
-    return <Svg.Text x={x} y={14} {...timeIndicatorStyle} textAnchor={textAnchor}>{`${from} - ${to}`}</Svg.Text>
-  } else {
-    let [[xFrom, anchorFrom], [xTo, anchorTo]] = [from, to].map(v => {
-      let minutes = timeAsMinutes(v)
-      let x = padding
-      let anchor = 'middle' as Svg.TextAnchor
-      if (minutes > timeAsMinutes("22:20")) {
-        x = width
-        anchor = 'end'
-      } else if (minutes < timeAsMinutes("3:00")) {
-        anchor = 'start'
-      } else {
-        let ratio = minutes / MINUTES_IN_DAY
-        x += Math.round(ratio * (width - x))
-      }    
-      
-      return [x, anchor as Svg.TextAnchor]
-    })
-
-    return (<>
-      <Svg.Text x={xFrom} y={14} textAnchor={anchorFrom} {...timeIndicatorStyle}>{from}</Svg.Text>
-      <Svg.Text x={xTo} y={14} textAnchor={anchorTo} {...timeIndicatorStyle}>{to}</Svg.Text>
-    </>)
-  }
-}
-
-const timeIndicatorStyle = {
-  opacity: 0.4,
-  fontSize: 10,
-}
-
-function TimeBar({ schedules, width, height, padding }: TimeBarProps) {
-  width -= padding
-
-  return <Svg.Svg width={width} height={height}>
-    <Svg.G>
-      {schedules.map((s, i) => {
-        return (<TimeIndicator key={`${i}_time`} from={s.from} to={s.to} width={width} margin={15} padding={padding} />
-        )
-      })}
-    </Svg.G>
-    <Svg.G>
-      {schedules.map((s, i) => {
-        const x = xForTime(s.from, width) + padding
-        const w = xForTime(s.to, width) - x
-        return (
-          <Svg.Rect key={`${i}_rect`} x={x} y={18} width={w} height={4} fill={Colors.accent}>{s.from}</Svg.Rect>
-        )
-      })}
-    </Svg.G>
-  </Svg.Svg>
-}
-
-async function openTimePicker(schedule, property) {
-  let [hours, minutes] = schedule[property].split(':')
+async function openTimePicker(schedule: Schedule, property: "from" | "to"): Promise<Schedule | undefined> {
+  let time = schedule[property]
   let {action, hour, minute} = await TimePickerAndroid.open({
-    hour: parseInt(hours, 10),
-    minute: parseInt(minutes, 10),
+    hour: time.hours,
+    minute: time.minutes,
     is24Hour: true
   }) as TimePickerAndroidTimeSetAction
 
   if (action == TimePickerAndroid.timeSetAction) {
     return {
       ...schedule,
-      [property]: `${hour}:${minute.toString().padStart(2, '0')}`
+      [property]: new Time(hour, minute)
     }
   }
 }
@@ -134,7 +44,7 @@ function RuleElement({ rule, onRemove, onEdit }) {
   let [editing, setEditing] = useState<boolean>(rule.name === undefined)
   let [modalVisible, setModalVisible] = useState<boolean>(false)
   
-  const { name, days, schedules } = localRule
+  const { schedules } = localRule
   
   let inputRef = useRef<TextInput>()
   useEffect(() => {
@@ -144,10 +54,6 @@ function RuleElement({ rule, onRemove, onEdit }) {
     }
   }, [editing])
   
-  const daysString = Object.keys(days)
-  .filter(day => days[day])
-  .map(day => DayShortNames[day])
-  .join(', ')
   
   const isInitialMount = useRef(true);
   useEffect(() => {
@@ -200,15 +106,12 @@ function RuleElement({ rule, onRemove, onEdit }) {
   }, [localRule])
 
   const addHours = useCallback(async () => {
-    let now = new Date();
-    let h = now.getHours();
-    let mm = now.getMinutes();
-
-    let schedule = {
-      from: `${h}:${mm.toString().padStart(2, '0')}`,
-      to: `${h}:${mm.toString().padStart(2, '0')}`,
-      high: 20, low: 16
+    let schedule: Schedule = {
+      from: Time.fromDate(new Date()),
+      to: Time.fromDate(new Date()),
+      high: 20
     }
+
     schedule = await openTimePicker(schedule, 'from')
 
     if (schedule) {
@@ -221,9 +124,7 @@ function RuleElement({ rule, onRemove, onEdit }) {
             ...localRule.schedules,
             schedule
           ].sort((a, b) => {
-            let afrom = timeAsMinutes(a.from)
-            let bfrom = timeAsMinutes(b.from)
-            return afrom - bfrom
+            return +a.from - +b.from
           })
         })
       }
@@ -260,91 +161,50 @@ function RuleElement({ rule, onRemove, onEdit }) {
       <Touchable onPress={() => setEditing(!editing)}>
         <View collapsable={false}>
           {/* Header of the rule view */}
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', padding: 8, paddingBottom: 0, position: 'relative', overflow: 'visible'}}>
-            <View style={{flex: 1, justifyContent: 'flex-start'}}>
-              <View style={{ flexDirection: 'row'}}>
-                <TextInput ref={inputRef} editable={editing} placeholder={"Preset"} onChangeText={(text) => setName(text)} style={[styles.text, styles.name]} value={name}/>
-                <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} onPress={() => setEditing(!editing)} />
-              </View>
+          <Header name={localRule.name} active={localRule.active} days={localRule.days} editing={editing} onNameChange={setName} onActiveChange={setActive} onEditingChange={setEditing }/>
+          
+          {/* Row with day selection and repeatable */}
+          {editing &&
+            <View style={styles.subHeader}>
+              <DaySelector ruleId={localRule.id} days={localRule.days} onDayChange={setDay} />
+              <RepeatCheckBox repeat={localRule.repeat} onChange={setRepeat} />
             </View>
-            <Switch value={localRule.active} onValueChange={(value) => setActive(value)} />
-          </View>
-          <View style={{ paddingHorizontal: 8, paddingBottom: 4 }} collapsable={false}>
-            {!editing && localRule.active && localRule.repeat &&
-              <Text style={[styles.text, { fontSize: 12 }]}>{daysString}</Text>
-            }
-            {editing &&
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', flexWrap: 'wrap' }} collapsable={false}>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1, marginTop: 8,  }}>
-                {
-                  Object.keys(DayShortNames)
-                  .map((day, i) => (
-                    <Touchable key={`${localRule.id}_${day}`} onPress={() => setDay(day as unknown as Day, !days[day])}>
-                      <View style={{ width: 24, height: 24, marginRight: 6,alignItems: 'center', justifyContent: 'center', borderColor: Colors.text.primary, borderWidth: 1, borderRadius: 12, opacity: localRule.days[day] ? 1 : 0.4 }}>
-                        <Text style={[styles.text, { fontSize: 12}]}>{DayShortNames[day].charAt(0)}</Text>
-                      </View>
-                    </Touchable>
-                  ))
-                }
-                </View>
-                <View style={{ flexDirection: 'row', flex: null, alignItems: 'center', justifyContent: 'flex-end', height: 24, marginTop: 8, }} collapsable={false}>
-                  <Text style={{ color: 'gray' }}>Repeat</Text>
-                  <CheckBox value={localRule.repeat} onValueChange={(value) => setRepeat(value)} />
-                </View>
-              </View>
-            }
-          </View>
+          }
+
           {/* Time bar */}
           <TimeBar schedules={schedules} width={width} height={18+4} padding={8} />
-      { editing && (<>
-        <View style={{ paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid' }}>
-          { schedules.map((schedule, idx) => {
-            
-            return <View key={`${rule.id}_${schedule.from}_${schedule.to}`} style={{ flexDirection: 'row', alignItems:'center', paddingVertical: 8 }}>
-              <View style={{ flex: 1, flexDirection: 'row' }}>
-                <Touchable onPress={async () => {
-                  let newSchedule = await openTimePicker(schedule, 'from')
-                  newSchedule && updateSchedule(idx, newSchedule)
-                }}>
-                  <View>
-                    <Text style={styles.timeSelector}>{schedule.from}</Text>
+
+          {/* Rule Editor */}
+          { editing && (<>
+            {/* Schedule editor */}
+            <View style={styles.ruleEditor}>
+              {
+                schedules.map((schedule, idx) => (
+                  <View key={`${rule.id}_${schedule.from}_${schedule.to}`} style={{ flexDirection: 'row', alignItems:'center', paddingVertical: 8 }}>
+                    <TimeSelector schedule={schedule} prop="from" onChange={(s) => updateSchedule(idx, s)} />
+
+                    <Text style={styles.timeSelector}>-</Text>
+
+                    <TimeSelector schedule={schedule} prop="to" onChange={(s) => updateSchedule(idx, s)} />
+
+                    {/* schedule temperature override */}
+                    <TemperatureSetter value={schedule.high} onChange={value => updateSchedule(idx, {...schedule, high: value })} />
+
+                    {/* Delete Schedule Button */}
+                    <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />
                   </View>
-                </Touchable>
-                <Text style={styles.timeSelector}>-</Text>
-                <Touchable onPress={async () => {
-                  let newSchedule = await openTimePicker(schedule, 'to')
-                  newSchedule && updateSchedule(idx, newSchedule)
-                }}>
-                  <View>
-                    <Text style={styles.timeSelector}>{schedule.to}</Text>
-                  </View>
-                </Touchable>
-              </View>
-              <TemperatureSetModal visible={modalVisible} value={schedule} onClose={() => setModalVisible(false)} onValueChange={(value) => { updateSchedule(idx, {...schedule, ...value}); setModalVisible(false) }}/>
-              <Touchable onPress={() => setModalVisible(true)}>
-                <View style={{ alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 20 }}>
-                  <Text style={[styles.smallText, { color: Colors.accent }]}>{schedule.high || 20}˚</Text>
-                </View>
-              </Touchable>
-              <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />
+                ))
+              }
             </View>
-          })}
-        </View>
-        <View style={{ flexDirection: 'row', paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid'}}>
-          <Touchable onPress={() => addHours()}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}>
-              <IconButton name="plus" size={16} color="gray" provider={Feather} />
-              <Text style={{ color: 'gray', marginLeft: 8 }}>Add hours</Text>
+
+            {/* Action buttons */}
+            <View style={{ flexDirection: 'row', paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid'}}>
+              {/* Add a schedule to the rule */}
+              <ActionButton onPress={addHours} icon="plus" Provider={Feather} iconPosition="start" title="Add hours" align="start" />
+              {/* Delete the rule */}
+              <ActionButton onPress={onRemove} icon="trash-2" Provider={Feather} iconPosition="start" title="Remove hours" align="end" />
             </View>
-          </Touchable>
-          <Touchable onPress={() => onRemove()}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', paddingVertical: 8 }}>
-              <IconButton name="trash-2" size={16} color="gray" provider={Feather} />
-              <Text style={{ color: 'gray', marginLeft: 8 }}>Delete</Text>
-            </View>
-          </Touchable>
-        </View>
-      </>)}
+          </>)}
       </View>
       
       </Touchable>
@@ -425,6 +285,19 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     marginBottom: 16,
     position: 'relative',
+  },
+  subHeader: {
+    paddingHorizontal: 8,
+    paddingBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    flexWrap: 'wrap'
+  },
+  ruleEditor: {
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    borderTopColor: Colors.fineBorder,
+    borderStyle: 'solid'
   },
   text: {
     color: Colors.text.primary,

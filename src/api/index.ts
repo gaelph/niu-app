@@ -43,7 +43,7 @@ function callApi<TYPE, PARAMS extends PaginatedQuery>(queryId: string, query: Ap
     if (result) {
       let transformed = transformDates(JSON.parse(result))
       // console.log('Serving result from storage for query', queryId, transformed)
-      // dispatch({ type: ApiActions.Fetched, payload: transformed })
+      dispatch({ type: ApiActions.Fetched, payload: transformed })
     }
 
     query(params)
@@ -67,7 +67,7 @@ interface ApiHookData<TYPE> {
   data: TYPE | CursoredList<TYPE>,
   loading: boolean,
   error: Error,
-  refresh: () => void,
+  refresh?: () => void,
   fetchMore?: () => void,
 }
 
@@ -122,7 +122,7 @@ export function useApi<TYPE, PARAMS extends PaginatedQuery>(query: ApiQuery<TYPE
   let fetchMore = () => {}
   if (cursoredList != null && cursoredList.items && cursoredList.cursor) {
     fetchMore = () => {
-      callApi<TYPE, PARAMS>(queryId.current, query, cursoredList.cursor as PARAMS, dispatch)
+      callApi<TYPE, PARAMS>(queryId.current, query, cursoredList.cursor as unknown as PARAMS, dispatch)
     }
   }
 
@@ -135,3 +135,27 @@ export function useApi<TYPE, PARAMS extends PaginatedQuery>(query: ApiQuery<TYPE
   }
 }
 
+export function useMutation<PARAMS, RETURN>(mutation: ApiQuery<RETURN, PARAMS>): (params: PARAMS) => ApiHookData<RETURN> {
+  let [state, dispatch] = useReducer(...reducer<RETURN>())
+  
+  let queryId = useRef<string>(uuid())
+  let timeout = useRef<number>()
+  return useCallback((params: PARAMS) => {
+
+    if (timeout.current) {
+      clearTimeout(timeout.current)
+    }
+
+    let t = setTimeout(() => {
+      callApi(queryId.current, mutation, params, dispatch)
+    }, 2000)
+
+    timeout.current = t
+
+    return {
+      data: state.data,
+      loading: state.loading,
+      error: state.error
+    }
+  }, [])
+}

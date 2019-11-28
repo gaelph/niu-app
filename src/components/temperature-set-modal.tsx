@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, Modal, StyleSheet } from 'react-native'
+import { View, Text, TextInput, Modal, TouchableNativeFeedback as Touchable, StyleSheet } from 'react-native'
 import Button from './button'
 
 import Colors from '../theme/colors'
@@ -8,13 +8,12 @@ function removeUnit(value) {
   return parseFloat(value).toString()
 }
 
-export default function TemperatureSetModal({ visible, onValueChange, onClose, value }) {
-  let [high, setHigh] = useState(value.high.toString())
+export function TemperatureSetModal({ visible, onValueChange, onClose, value }) {
+  let [high, setHigh] = useState(value.toString())
 
-  console.log('render modal', visible, value)
   return <Modal
     visible={visible}
-    onRequestClose={() => onValueChange({ high })}
+    onRequestClose={() => onValueChange(high)}
     onDismiss={onClose}
     transparent={false}
     animationType='slide'
@@ -29,17 +28,37 @@ export default function TemperatureSetModal({ visible, onValueChange, onClose, v
       <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
         <View style={styles.inputContainer}>
           <TextInput value={high} onChangeText={setHigh} autoFocus
-           style={[styles.input, styles.high]} keyboardType='numeric' maxLength={3} onSubmitEditing={() => onValueChange(({ high }))} />
+           style={[styles.input, styles.high]} keyboardType='numeric' maxLength={3} onSubmitEditing={() => onValueChange(high)} />
           <Text style={[styles.input, styles.high]}>˚</Text>
         </View>
       </View>
       <View style={{ flexDirection: 'row', width: '100%', alignItems: 'flex-end'}}>
         <Button onPress={onClose} textStyle={{ fontSize: 22 }}>Cancel</Button>
         <View collapsable={false} style={{ flex: 1 }}></View>
-        <Button onPress={() => onValueChange({ high })} textStyle={{ fontSize: 22, color: Colors.text.primary }}>OK</Button>
+        <Button onPress={() => onValueChange(high)} textStyle={{ fontSize: 22, color: Colors.text.primary }}>OK</Button>
       </View>
     </View>
   </Modal>
+}
+
+type TemperatureSetterProps = {
+  value: number,
+  onChange: (value: number) => void
+}
+
+export default function TemperatureSetter({ value, onChange }: TemperatureSetterProps) {
+  let [modalVisible, setModalVisible] = useState(false)
+
+  return (
+    <>
+      <TemperatureSetModal visible={modalVisible} value={value || 20} onClose={() => setModalVisible(false)} onValueChange={(value) => { onChange(value); setModalVisible(false) }}/>                
+      <Touchable onPress={() => setModalVisible(true)}>
+        <View style={{ alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 20 }}>
+          <Text style={[styles.text, styles.small, { color: Colors.accent }]}>{value || 20}˚</Text>
+        </View>
+      </Touchable>
+    </>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -55,6 +74,9 @@ const styles = StyleSheet.create({
   text: {
     fontFamily: 'Raleway-Regular',
     color: 'gray'
+  },
+  small: {
+    fontSize: 24,
   },
   heading: {
     fontFamily: 'Raleway-SemiBold',
