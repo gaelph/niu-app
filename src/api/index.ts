@@ -92,7 +92,6 @@ export function useApiPolling<TYPE, PARAMS>(query: ApiQuery<TYPE, PARAMS>, inter
   }, [call])
 
   const refresh = useCallback(() => {
-    console.log('refresh', state)
     callApi<TYPE, PARAMS>(queryId.current, query, params, dispatch)
   }, [query, params, state, dispatch, call])
 

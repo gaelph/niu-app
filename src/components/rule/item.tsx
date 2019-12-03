@@ -1,6 +1,16 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { View, Text, TextInput, CheckBox, Switch, StyleSheet, TouchableNativeFeedback as Touchable, Animated, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import { Feather } from '@expo/vector-icons'
+import dayjs from 'dayjs'
+import weekdays from 'dayjs/plugin/weekday'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import utc from 'dayjs/plugin/utc'
+
+dayjs.extend(weekdays)
+dayjs.extend(relativeTime)
+dayjs.extend(utc)
+
+
 import IconButton from '../icon-button'
 
 import { text, flex, h, v, m, p } from '../../theme/styles'
@@ -37,21 +47,41 @@ interface HeaderProps {
   days: {
     [T in Day]: boolean
   }
+  nextDates: Date[],
   editing: boolean,
   inputRef: React.MutableRefObject<TextInput>,
   onStartEditing: (inputRef: React.MutableRefObject<TextInput>) => void,
   onNameChange: (name: string) => void,
   onActiveChange: (active: boolean) => void,
-  onEditingChange: (editing: boolean) => void
 }
 
-export function Header({ name, active, days, editing, inputRef, onNameChange, onActiveChange, onEditingChange }: HeaderProps) {
+export function Header({ name, active, days, nextDates, editing, inputRef, onNameChange, onActiveChange }: HeaderProps) {
   let _inputRef = useRef<TextInput>()
 
-  const daysString = Object.keys(days)
+  const daysString = nextDates.length == 0 
+  ? Object.keys(days)
     .filter(day => days[day])
     .sort(sortDays)
     .map(day => DayShortNames[day])
+    .join(', ')
+  : nextDates
+    .map(d => dayjs(d))
+    .filter(d => !d.isBefore(dayjs()))
+    .map((d: dayjs.Dayjs) => d.unix())
+    .sort()
+    .map((timestamp: number) => dayjs.unix(timestamp))
+    .map((day: dayjs.Dayjs) => {
+      let tomorrow = dayjs().utc().add(1, 'day')
+      if (day.utc().isSame(dayjs().utc(), 'day')) {
+        return 'Today'
+      }
+      else if (day.utc().isSame(tomorrow, 'day')) {
+        return 'Tomorrow'
+      }
+      else {
+        return DayShortNames[(day.weekday() - 1).toString()]
+      }
+    })
     .join(', ')
 
   useEffect(() => {
@@ -67,9 +97,7 @@ export function Header({ name, active, days, editing, inputRef, onNameChange, on
           <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} />
         </View>
         {!editing &&
-          // <FadeInOut duration={400}>
-            <Text style={[text.default, text.primary, text.small, text.bold]}>{daysString}</Text>
-          // </FadeInOut>
+          <Text style={[text.default, text.primary, text.small, text.bold]}>{daysString}</Text>
         }
       </View>
       <Switch value={active} onValueChange={onActiveChange} />
@@ -151,12 +179,22 @@ export function TimeSelector({ schedule, prop, onChange }: TimeSelectorProps) {
 }
 
 
+function nextDays(days: {[K in Day]: boolean}, date: Date): Date[] {
+  return Object.values(days)
+    .map((bool: boolean, i: number) => [i, bool])
+    .filter(([_, bool]: [number, boolean]) => bool)
+    .map(([day, _]: [number, boolean]) => {
+      return dayjs(date).weekday(day + 1).toDate()
+    })
+
+}
 
 export default ({ rule, onStartEditing, onChange, onRemove }) => {
   const [name, setName] = useState<string>(rule.name)
   const [active, setActive] = useState<boolean>(rule.active)
   const [repeat, setRepeat] = useState<boolean>(rule.repeat)
   const [days, setDays] = useState(rule.days)
+  const [nextDates, setNextDates] = useState<Date[]>(rule.next_dates)
   const [schedules, setSchedules] = useState(rule.schedules)
 
   const [width, setWidth] = useState<number>(0)
@@ -171,19 +209,40 @@ export default ({ rule, onStartEditing, onChange, onRemove }) => {
 
   const updateActive = useCallback((active) => {
     setActive(active)
-    onChange({ id: rule.id, active })
+
+    let next_dates = []
+    if (active && !rule.repeat) {
+      next_dates = nextDays(rule.days, new Date())
+    }
+    setNextDates(next_dates)
+
+    onChange({ id: rule.id, active, next_dates })
   }, [rule])
 
   const updateRepeat = useCallback((repeat) => {
     setRepeat(repeat)
-    onChange({ id: rule.id, repeat })
+
+    let next_dates = []
+    if (!repeat) {
+      next_dates = nextDays(rule.days, new Date())
+    }
+
+    setNextDates(next_dates)
+
+    onChange({ id: rule.id, repeat, next_dates })
   }, [rule])
 
   const updateDays = useCallback((day, value) => {
     let update = { ...days, [day]: value }
 
+    let next_dates = []
+    if (!rule.repeat) {
+      next_dates = nextDays(update, new Date())
+    }
+
     setDays(update)
-    onChange({ id: rule.id, days: update })
+    setNextDates(next_dates)
+    onChange({ id: rule.id, days: update, next_dates })
   }, [rule])
 
   const updateSchedules = useCallback((schedules) => {
@@ -223,6 +282,14 @@ export default ({ rule, onStartEditing, onChange, onRemove }) => {
     updateSchedules(updates)
   }, [schedules])
 
+  let actualActive = repeat
+    ? active
+    : active && !nextDates.every(d => {
+      let date = dayjs(d)
+      let today = dayjs()
+      return date.isBefore(today, 'day')
+    })
+
   return (
     <View style={[m.b16, styles.item]} onLayout={({ nativeEvent: { layout: { width } } }) => setWidth(width - 2)}>
       <Touchable onPress={() => {
@@ -233,11 +300,10 @@ export default ({ rule, onStartEditing, onChange, onRemove }) => {
       }}>
         <View collapsable={false}>
           {/* Header of the rule view */}
-          <Header name={name} active={active} days={days} editing={editing} inputRef={inputRef}
+          <Header name={name} active={actualActive} days={days} nextDates={nextDates} editing={editing} inputRef={inputRef}
             onStartEditing={onStartEditing}
             onNameChange={updateName}
             onActiveChange={updateActive}
-            onEditingChange={setEditing }
           />
           
           {/* Row with day selection and repeatable */}

@@ -43,13 +43,22 @@ export class Rule {
     [Day.Sat]: boolean,
     [Day.Sun]: boolean,
   }
+  next_dates: Date[]
   repeat: boolean
   schedules: Schedule[]
 
-  constructor() {}
+  constructor(o) {
+    this.id = o.id
+    this.name = o.name
+    this.active = o.active
+    this.days = o.days
+    this.next_dates = o.next_dates || []
+    this.repeat = o.repeat
+    this.schedules = o.schedules
+  }
 
-  static default() {
-    return {
+  static default(): Rule {
+    return new Rule({
       id: uuid(),
       name: undefined,
       active: false,
@@ -62,18 +71,23 @@ export class Rule {
         [Day.Sat]: false,
         [Day.Sun]: false,
       },
+      next_dates: [],
       repeat: false,
       schedules: []
-    }
+    })
   }
 
-  static fromObject(object: Object): Rule{
+  static fromObject(object: Object): Rule {
     let rule = Rule.default()
 
     for (let prop in object) {
       if (object[prop]) {
         if (["id", "name", "active", "days", "repeat"].includes(prop)) { 
           rule[prop] = object[prop]
+        }
+        
+        if (prop == 'next_dates') {
+          rule[prop] = object[prop].map(isoString => new Date(isoString))
         }
 
         if (prop == "schedules") {
