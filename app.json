@@ -14,7 +14,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#fcf9ea"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
@@ -27,8 +27,12 @@
     },
     "android": {
       "package": "fr.gaelph.nezh",
-      "versionCode": 1
-
+      "versionCode": 1,
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "backgroundColor": "#fcf9ea",
+        "foregroundImage": "./assets/icon-android.png"
+      }
     }
   }
 }
