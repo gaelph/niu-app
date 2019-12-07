@@ -17,7 +17,7 @@ const temp = {
     return Math.floor(t)
   },
   decimals(t: number): number {
-    return Math.round((t - this.integer(t)) * 10)
+    return Math.floor((t - this.integer(t)) * 10)
   }
 }
 
