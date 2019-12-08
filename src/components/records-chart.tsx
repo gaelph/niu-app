@@ -33,16 +33,68 @@ const Line = ({ line }: { line?: any}) => (
   />
 )
 
-export default function RecordsChart({ records }) {
+const SECOND = 1000
+const MINUTE = 60 * SECOND
+const HOUR   = 60 * MINUTE
+
+interface RecordsChartProps {
+  records: TemperatureRecord[]
+}
+
+function minMax(records: TemperatureRecord[]): TemperatureRecord[] {
+  let minAndMax: TemperatureRecord[] = []
+  let previousAscent = 0;
+
+  for (let i in records) {
+    let index: number = parseInt(i, 10)
+    let record = records[index]
+
+    if (index === 0 || index === records.length - 1) {
+      minAndMax.push(record)
+      console.log('push', index, record.createdOn)
+      continue
+    }
+
+    let previousRecord = records[index - 1]
+    let diff = record.value - previousRecord.value
+    let ascent = diff > 0
+      ? 1
+      : diff < 0
+        ? -1
+        : 0
+
+    if (ascent != previousAscent ) {
+      previousAscent = ascent
+
+      let r: TemperatureRecord
+      if (ascent == 1) {
+        r = previousRecord
+      } else {
+        r = record
+      }
+      minAndMax.push(r)
+      console.log('push', index, record.createdOn)
+    }
+  }
+
+
+
+  return minAndMax
+}
+
+export default function RecordsChart({ records }: RecordsChartProps) {
   const { width } = useDimensions('window')
   const chartWidth = width - 2 * Dimensions.padding
 
-
   const [values, dates, bound] = useMemo(() => {
-    records = [...records].sort((a, b) => +a.createdOn - +b.createdOn)
+    records = [...records].sort((a: TemperatureRecord, b: TemperatureRecord) => +a.createdOn - +b.createdOn)
     let latest = records[records.length - 1].createdOn
     let recent = records
-    .filter((r => +latest - +r.createdOn < 8 * 60 * 60 * 1000))
+    .filter(((r: TemperatureRecord) => +latest - +r.createdOn < 8 * HOUR))
+
+    console.log('recent no filter', recent.length)
+    recent = minMax(recent)
+    console.log('recent minMax filter', recent.length)
 
     let values = recent.map(r => r.value)
     let dates = recent.map(r => r.createdOn)
@@ -52,7 +104,7 @@ export default function RecordsChart({ records }) {
       min: Math.min(...values) - 2
     }
 
-    return [values, dates, bound]
+    return [recent, dates, bound]
   }, [records, width])
 
   return (
@@ -61,7 +113,9 @@ export default function RecordsChart({ records }) {
         <AreaChart
           style={{ height: 110, width: chartWidth }}
           data={ values }
-          curve={ shape.curveNatural }
+          yAccessor={({ item }) => item.value}
+          xAccessor={({ item }) => +item.createdOn}
+          curve={ shape.curveMonotoneX }
           svg={{ fill: 'url(#grad1)' }}
           yMin={bound.min}
           yMax={bound.max}
