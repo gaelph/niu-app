@@ -1,0 +1,49 @@
+import { Setting } from '../api/models/setting'
+import { updateSetting } from '../api/queries'
+
+interface SettingParam {
+  id: string,
+  title: string,
+  description: string,
+  type: Function,
+  defaultValue: any
+}
+
+export const DEFAULT_TARGET: SettingParam = {
+  id: "default_target",
+  title: "Default target temperature",
+  description: "Default temperature when creating new schedules",
+  type: Number,
+  defaultValue: 20
+}
+
+export const AWAY_TEMPERATURE: SettingParam = {
+  id: "away_temperature",
+  title: "Away temperature",
+  description: "Temperature when you are away from home",
+  type: Number,
+  defaultValue: 15
+}
+
+async function getSetting({ id, type, defaultValue }: SettingParam): Promise<any> {
+  let setting = await Setting.loadLocal(id, type)
+
+  if (setting) return setting.value
+  else         return defaultValue
+}
+
+async function setSetting({ id, title, description }: SettingParam, value: any): Promise<void> {
+  let setting = new Setting(id, title, description, value)
+  
+  try {
+    await updateSetting(setting)
+    await setting.saveLocal()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+export default {
+  get: getSetting,
+  set: setSetting
+}

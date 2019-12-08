@@ -4,11 +4,7 @@ import Button from './button'
 
 import Colors from '../theme/colors'
 
-function removeUnit(value) {
-  return parseFloat(value).toString()
-}
-
-export function TemperatureSetModal({ visible, onValueChange, onClose, value }) {
+export function TemperatureSetModal({ visible, onValueChange, onClose, value, children }) {
   let [high, setHigh] = useState(value.toString())
 
   return <Modal
@@ -23,7 +19,7 @@ export function TemperatureSetModal({ visible, onValueChange, onClose, value }) 
     <View style={styles.container}>
       <Text style={[styles.text, styles.heading]}>Temperature Settings</Text>
       <Text style={[styles.text, styles.paragraph]}>
-        Select the temperture settings you would like to use for these hours
+        {children}
       </Text>
       <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
         <View style={styles.inputContainer}>
@@ -43,18 +39,22 @@ export function TemperatureSetModal({ visible, onValueChange, onClose, value }) 
 
 type TemperatureSetterProps = {
   value: number,
+  defaultValue: number | '',
+  message: string,
   onChange: (value: number) => void
 }
 
-export default function TemperatureSetter({ value, onChange }: TemperatureSetterProps) {
+export default function TemperatureSetter({ value, defaultValue, onChange, message }: TemperatureSetterProps) {
   let [modalVisible, setModalVisible] = useState(false)
 
   return (
     <>
-      <TemperatureSetModal visible={modalVisible} value={value || 20} onClose={() => setModalVisible(false)} onValueChange={(value) => { onChange(value); setModalVisible(false) }}/>                
+      <TemperatureSetModal visible={modalVisible} value={value || defaultValue} onClose={() => setModalVisible(false)} onValueChange={(value) => { onChange(value); setModalVisible(false) }}>
+        {message}
+      </TemperatureSetModal>             
       <Touchable onPress={() => setModalVisible(true)}>
         <View style={{ alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 20 }}>
-          <Text style={[styles.text, styles.small, { color: Colors.accent }]}>{value || 20}˚</Text>
+          <Text style={[styles.text, styles.small, { color: Colors.accent }]}>{value || defaultValue}˚</Text>
         </View>
       </Touchable>
     </>

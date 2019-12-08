@@ -63,6 +63,7 @@ export function Header({ name, active, days, nextDates, editing, inputRef, onNam
     .filter(day => days[day])
     .sort(sortDays)
     .map(day => DayShortNames[day])
+    .filter(day => day !== undefined)
     .join(', ')
   : nextDates
     .map(d => dayjs(d))
@@ -189,7 +190,7 @@ function nextDays(days: {[K in Day]: boolean}, date: Date): Date[] {
 
 }
 
-export default ({ rule, onStartEditing, onChange, onRemove }) => {
+export default ({ rule, defaultTemperature, onStartEditing, onChange, onRemove }) => {
   const [name, setName] = useState<string>(rule.name)
   const [active, setActive] = useState<boolean>(rule.active)
   const [repeat, setRepeat] = useState<boolean>(rule.repeat)
@@ -252,6 +253,7 @@ export default ({ rule, onStartEditing, onChange, onRemove }) => {
 
   const addSchedule = useCallback(async () => {
     let schedule = Schedule.default()
+    schedule.high = defaultTemperature
 
     schedule = await openTimePicker(schedule, 'from')
 
@@ -276,8 +278,8 @@ export default ({ rule, onStartEditing, onChange, onRemove }) => {
     updateSchedules(updated)
   }, [schedules])
 
-  const removeSchedule = useCallback(idx => {
-    let updates = schedules.filter(i => i !== idx)
+  const removeSchedule = useCallback((idx: number) => {
+    let updates = schedules.filter((_, i: number) => i !== idx)
 
     updateSchedules(updates)
   }, [schedules])
@@ -333,7 +335,12 @@ export default ({ rule, onStartEditing, onChange, onRemove }) => {
                     </View>
 
                     {/* schedule temperature override */}
-                    <TemperatureSetter value={schedule.high} onChange={value => updateSchedule(idx, {...schedule, high: value })} />
+                    <TemperatureSetter
+                      value={schedule.high} 
+                      defaultValue={defaultTemperature}
+                      message="Select the temperture settings you would like to use for these hours"
+                      onChange={value => updateSchedule(idx, {...schedule, high: value })}
+                      />
 
                     {/* Delete Schedule Button */}
                     <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />

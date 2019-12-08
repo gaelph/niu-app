@@ -5,13 +5,13 @@ import { Rule } from '../../api/models/rule'
 
 import RuleListItem from './item'
 
-export default ({ rules, onStartEditing, onChange, onRemove }) => {
+export default ({ rules, defaultTemperature, onStartEditing, onChange, onRemove }) => {
 
   return (
     <View style={styles.container}>
       {
         rules.map(rule =>
-          <RuleListItem key={rule.id} rule={rule} onStartEditing={onStartEditing} onChange={onChange} onRemove={onRemove} />
+          <RuleListItem key={rule.id} rule={rule} defaultTemperature={defaultTemperature} onStartEditing={onStartEditing} onChange={onChange} onRemove={onRemove} />
         )
       }
     </View>

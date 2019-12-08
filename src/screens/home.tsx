@@ -15,6 +15,8 @@ import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 import { StatusBar, useDimensions } from '../support/dimensions'
 
+import Settings, { DEFAULT_TARGET } from '../settings'
+
 import AppBar from '../components/app-bar'
 import TemperatureView from '../components/temperature-view'
 import RecordsChart from '../components/records-chart'
@@ -46,6 +48,13 @@ export function Home() {
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
   let [rules, setRules] = useState([])
+
+  let [defaultTemperature, setDefaultTemperature] = useState('')
+
+  useEffect(() => {
+    Settings.get(DEFAULT_TARGET)
+    .then(setDefaultTemperature)
+  }, [])
   
   useEffect(() => {
     getRules()
@@ -136,7 +145,7 @@ export function Home() {
           { records &&
             <RecordsChart records={records.items} />
           }
-          <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} />
+          <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} defaultTemperature={defaultTemperature} />
           {/* <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} /> */}
         </View>
       </ScrollView>

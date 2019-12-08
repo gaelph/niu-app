@@ -9,6 +9,7 @@ import {
 
 import { TemperatureRecord } from './models/temperature-record'
 import { Rule } from './models/rule'
+import { Setting } from './models/setting'
 
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -39,7 +40,10 @@ let REMOTE_FUNCTIONS = {
   "createRule": 1,
   "listRules": 1,
   "updateRule": 1,
-  "deleteRule": 1
+  "deleteRule": 1,
+
+  "listSettings": 0,
+  "updateSetting": 1
 }
 
 function buildQueries(): Queries {
@@ -145,6 +149,36 @@ export async function deleteRule(rule: Rule): Promise<void> {
   const result: ApiResponse<undefined> = await queries.deleteRule({ id: rule.id })
 
   if (!result.success) {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function listSettings(): Promise<Setting[]> {
+  const result: ApiResponse<any[]> = await queries.listSettings()
+
+  if (result.success) {
+    return result.data.map(data => {
+      let setting = Setting.fromObject(data)
+      setting.saveLocal()
+
+      return setting
+    })
+  } else {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function updateSetting(setting: any): Promise<any> {
+  const result: ApiResponse<any> = await queries.updateSetting(setting)
+
+  if (result.success) {
+    let setting = Setting.fromObject(result.data)
+    setting.saveLocal()
+
+    return setting
+  } else {
     console.error(result.error)
     throw new Error(result.error)
   }
