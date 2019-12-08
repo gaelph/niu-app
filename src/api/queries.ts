@@ -170,8 +170,8 @@ export async function listSettings(): Promise<Setting[]> {
   }
 }
 
-export async function updateSetting(setting: any): Promise<any> {
-  const result: ApiResponse<any> = await queries.updateSetting(setting)
+export async function updateSetting(setting: Setting): Promise<any> {
+  const result: ApiResponse<Setting> = await queries.updateSetting(setting)
 
   if (result.success) {
     let setting = Setting.fromObject(result.data)
