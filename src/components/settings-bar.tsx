@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { View, StyleSheet, Dimensions as Dim, Text } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
-import { Link } from 'react-router-native'
+import { useHistory } from 'react-router-native'
 
 import IconButton from './icon-button'
 
@@ -13,13 +13,16 @@ import { useDimensions } from '../support'
 
 export default function AppBar() {
   let Screen = useDimensions('window')
+  let history = useHistory()
+
+  let onPress = useCallback(() => {
+    history.replace('/')
+  }, [history])
 
 
   return (
     <View style={[styles.container, { width: Screen.width }]}>
-      <Link to="/">
-        <IconButton name="arrow-left" size={18} color={Colors.foreground} provider={Feather} style={styles.icon} />
-      </Link>
+      <IconButton name="arrow-left" onPress={onPress} size={24} color={Colors.foreground} provider={Feather} style={styles.icon} />
       <Text style={[text.default, text.primary, flex, m.l12]}>
         Settings
       </Text>
@@ -33,12 +36,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: Dimensions.appBar.height,
     padding: 16,
-    paddingHorizontal: 30,
-    backgroundColor: 'transparent',
+    // backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
   icon: {
-    margin: -4
+    padding: 12,
   }
 });

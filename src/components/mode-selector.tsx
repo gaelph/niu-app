@@ -7,6 +7,8 @@ import Colors from '../theme/colors'
 
 import IconButton from './icon-button'
 
+import { CurrentState } from '../rules/index'
+
 enum PillType {
   High = "sun",
   Low = "moon",
@@ -16,8 +18,8 @@ enum PillType {
 
 interface PillProps {
   type: PillType,
-  selected: PillType,
-  onSelect: (PillType) => void,
+  selected: boolean,
+  onSelect?: (PillType) => void,
   iconLib?: React.ComponentType,
 }
 
@@ -25,16 +27,20 @@ function Pill({ type, selected, onSelect, iconLib }: PillProps): React.ReactElem
   const Icon = iconLib || FontAwesome5
   return <IconButton
     name={type} color={Colors.accent} size={20} provider={Icon} 
-    style={[styles.pill, selected === type && styles.active]}
-    onPress={() => onSelect(type)} />
+    style={[styles.pill, selected && styles.active]}
+    onPress={() => onSelect && onSelect(type)} />
 }
 
-export default function ModeSelector(): React.ReactElement {
-  const [selected, setSelected] = useState<PillType>(PillType.High)
+interface ModeSelectorProps {
+  deviceState: CurrentState
+}
+
+export default function ModeSelector({ deviceState }: ModeSelectorProps): React.ReactElement {
+  // const [selected, setSelected] = useState<PillType>(PillType.High)
   
   return <View style={styles.container}>
-    <Pill type={PillType.High} selected={selected} onSelect={setSelected} iconLib={Feather} />
-    <Pill type={PillType.Low} selected={selected} onSelect={setSelected} />
+    <Pill type={PillType.High} selected={!!deviceState.current} iconLib={Feather} />
+    <Pill type={PillType.Low} selected={!deviceState.current} />
   </View>
 }
 

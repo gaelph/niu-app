@@ -9,13 +9,14 @@ import {
   ToastAndroid,
 } from 'react-native';
 import { getRules, getList, createRule, updateRule, deleteRule, useApiPolling, useApi, useMutation, } from '../api'
+import { ListCursor } from '../api/types'
 import { Dimensions as Dim } from 'react-native'
 
 import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 import { StatusBar, useDimensions } from '../support/dimensions'
 
-import Settings, { DEFAULT_TARGET } from '../settings'
+import Settings, { AWAY_TEMPERATURE, TIMEZONE_OFFET } from '../settings'
 
 import AppBar from '../components/app-bar'
 import TemperatureView from '../components/temperature-view'
@@ -24,37 +25,50 @@ import PlusButton from '../components/plus-button'
 import Rules from '../components/rule/list'
 
 import { TemperatureRecord } from '../api/models/temperature-record'
-import { Rule } from '../api/models/rule'
+import { Rule, Schedule } from '../api/models/rule'
+
+import { CurrentState, currentDeviceState } from '../rules'
 
 const Screen = Dim.get('window')
 
-const temp = {
-  integer(t: number): number {
-    return Math.floor(t)
-  },
-  decimals(t: number): number {
-    return Math.round((t - this.integer(t)) * 10)
-  }
-}
-
-let addRule = () => {
-}
 
 export function Home() {
   let Screen = useDimensions('window')
   let scrollview = useRef<ScrollView>()
 
-  const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000)
+  const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000, new ListCursor(1, 300))
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
   let [rules, setRules] = useState([])
 
-  let [defaultTemperature, setDefaultTemperature] = useState('')
+  let [defaultTemperature, setDefaultTemperature] = useState<string | number>('')
+  let [timezoneOffset, setTimezoneOffset] = useState<number>(new Date().getTimezoneOffset() * 60)
+  let [deviceState, setDeviceState] = useState<CurrentState>()
 
   useEffect(() => {
-    Settings.get(DEFAULT_TARGET)
+    Settings.get(AWAY_TEMPERATURE)
     .then(setDefaultTemperature)
+
+    Settings.get(TIMEZONE_OFFET)
+    .then(setTimezoneOffset)
   }, [])
+
+  let refreshTimeout = undefined
+  useEffect(() => {
+    clearTimeout(refreshTimeout)
+
+    let fn = () => {
+      let state = currentDeviceState(rules, timezoneOffset)
+      setDeviceState(state)
+    }
+
+    fn()
+    refreshTimeout = setTimeout(fn, 60000)
+
+    return () => {
+      clearTimeout(refreshTimeout)
+    }
+  }, [rules, defaultTemperature, timezoneOffset])
   
   useEffect(() => {
     getRules()
@@ -140,10 +154,10 @@ export function Home() {
             <Text style={styles.text}>An error occurred</Text>
           }
           { latestRecord &&
-            <TemperatureView record={latestRecord} />
+            <TemperatureView record={latestRecord} defaultTemperature={defaultTemperature as number} deviceState={deviceState} />
           }
           { records &&
-            <RecordsChart records={records.items} />
+            <RecordsChart records={records.items as TemperatureRecord[]} />
           }
           <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} defaultTemperature={defaultTemperature} />
           {/* <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} /> */}

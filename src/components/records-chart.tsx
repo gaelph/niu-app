@@ -51,7 +51,6 @@ function minMax(records: TemperatureRecord[]): TemperatureRecord[] {
 
     if (index === 0 || index === records.length - 1) {
       minAndMax.push(record)
-      console.log('push', index, record.createdOn)
       continue
     }
 
@@ -66,14 +65,7 @@ function minMax(records: TemperatureRecord[]): TemperatureRecord[] {
     if (ascent != previousAscent ) {
       previousAscent = ascent
 
-      let r: TemperatureRecord
-      if (ascent == 1) {
-        r = previousRecord
-      } else {
-        r = record
-      }
-      minAndMax.push(r)
-      console.log('push', index, record.createdOn)
+      minAndMax.push(previousRecord)
     }
   }
 
@@ -92,16 +84,14 @@ export default function RecordsChart({ records }: RecordsChartProps) {
     let recent = records
     .filter(((r: TemperatureRecord) => +latest - +r.createdOn < 8 * HOUR))
 
-    console.log('recent no filter', recent.length)
     recent = minMax(recent)
-    console.log('recent minMax filter', recent.length)
 
     let values = recent.map(r => r.value)
     let dates = recent.map(r => r.createdOn)
     
     let bound = {
       max: Math.max(...values) + 0.5,
-      min: Math.min(...values) - 2
+      min: 5 // Math.min(...values) - 2
     }
 
     return [recent, dates, bound]

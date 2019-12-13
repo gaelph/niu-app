@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { View, StyleSheet, Dimensions as Dim, Alert } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
-import { Link } from 'react-router-native'
+import { useHistory } from 'react-router-native'
 
 import IconButton from './icon-button'
 
@@ -10,26 +10,19 @@ import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 import { useDimensions } from '../support'
 
-const packagJson = require('../../package.json')
 
 export default function AppBar() {
   let Screen = useDimensions('window')
+  let history = useHistory()
 
-  const showVersionDialog = useCallback(() => {
-    Alert.alert(
-      'Niu',
-      `version ${packagJson.version}`,
-      [
-        {text: 'OK'}
-      ]
-    )
-  }, [])
+  let toSettings = useCallback(() => {
+    history.push('/settings')
+  }, [history])
+
 
   return (
     <View style={[styles.container, { width: Screen.width }]}>
-      <Link to="/settings">
-        <IconButton name="settings" size={24} color={Colors.foreground} provider={Feather} style={styles.icon} />
-      </Link>
+      <IconButton name="settings" onPress={toSettings} size={24} color={Colors.foreground} provider={Feather} style={styles.icon} />
     </View>
   )
 }
@@ -40,12 +33,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: Dimensions.appBar.height,
     padding: 16,
-    paddingHorizontal: 30,
-    backgroundColor: 'transparent',
+    paddingHorizontal: 16,
+    // backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
   icon: {
-    margin: -4
+    margin: -4,
+    padding: 12
   }
 });

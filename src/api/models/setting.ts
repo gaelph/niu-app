@@ -17,8 +17,12 @@ export class Setting {
     return new Setting(id, title, description, value)
   }
 
+  static key(id: string): string {
+    return `Setting:${id}`
+  }
+
   static async loadLocal(id: string, type: Function): Promise<Setting> {
-    const raw = await AsyncStorage.getItem(id)
+    const raw = await AsyncStorage.getItem(Setting.key(id))
     if (raw) {
       let { title, description, value } = JSON.parse(raw)
 
@@ -26,8 +30,19 @@ export class Setting {
     }
   }
 
+  static async loadAll(): Promise<Setting[]> {
+    let allKeys = await AsyncStorage.getAllKeys()
+
+    let promises = allKeys
+      .filter(key => key.startsWith("Setting:"))
+      .map(key => AsyncStorage.getItem(key))
+
+    return (await Promise.all(promises))
+      .map(str => Setting.fromObject(JSON.parse(str)))
+  }
+
   saveLocal(): Promise<void> {
-    return AsyncStorage.setItem(this.id, JSON.stringify(this))
+    return AsyncStorage.setItem(Setting.key(this.id), JSON.stringify(this))
   }
 
 }

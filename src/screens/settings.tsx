@@ -167,13 +167,17 @@ export const Settings = () => {
 
   let { loading, error, data, refresh } = useApi(listSettings)
 
-  console.log('Settings.loading', loading)
-
   if (error) {
     console.error(error)
   }
 
   let [items, setItems] = useState<SettingItem[]>([])
+
+  useEffect(() => {
+    SettingsStore.all()
+      .then((settings) => buildSettingsList(settings))
+  }, [])
+  
   
   useEffect(() => {
     if (data) {

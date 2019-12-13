@@ -58,13 +58,13 @@ export const DayShortNames = {
 }
 
 export const DayFromNumber = {
-  "mon": DayShortNames[Day.Mon],
-  "tue": DayShortNames[Day.Tue],
-  "wed": DayShortNames[Day.Wed],
-  "thu": DayShortNames[Day.Thu],
-  "fri": DayShortNames[Day.Fri],
-  "sat": DayShortNames[Day.Sat],
-  "sun": DayShortNames[Day.Sun],
+  0: DayShortNames[Day.Mon],
+  1: DayShortNames[Day.Tue],
+  2: DayShortNames[Day.Wed],
+  3: DayShortNames[Day.Thu],
+  4: DayShortNames[Day.Fri],
+  5: DayShortNames[Day.Sat],
+  6: DayShortNames[Day.Sun],
 }
 
 export const dayToInt = {

@@ -17,7 +17,7 @@ export default function IconButton({ provider, onPress, style, ...props }: IconB
   const Provider = provider
   if (onPress) {
     return (
-      <Touchable onPress={onPress} useForeground background={Touchable.SelectableBackgroundBorderless()}>
+      <Touchable onPress={onPress} background={Touchable.SelectableBackgroundBorderless()}>
         <View style={style}>
           <Provider {...props} />
         </View>

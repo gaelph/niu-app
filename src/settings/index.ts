@@ -25,6 +25,14 @@ export const AWAY_TEMPERATURE: SettingParam = {
   defaultValue: 15
 }
 
+export const TIMEZONE_OFFET: SettingParam = {
+  id: "timezone",
+  title: null,
+  description: null,
+  type: Number,
+  defaultValue: 0
+}
+
 async function getSetting({ id, type, defaultValue }: SettingParam): Promise<any> {
   let setting = await Setting.loadLocal(id, type)
 
@@ -43,7 +51,12 @@ async function setSetting({ id, title, description }: SettingParam, value: any):
   }
 }
 
+async function getAllSettings(): Promise<Setting[]> {
+  return Setting.loadAll()
+}
+
 export default {
   get: getSetting,
-  set: setSetting
+  set: setSetting,
+  all: getAllSettings
 }

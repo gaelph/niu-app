@@ -1,4 +1,4 @@
-
+import dayjs from 'dayjs'
 
 
 
@@ -48,6 +48,12 @@ export default class Time {
     return new Time(h, mm)
   }
 
+  static fromDayjs(datetime: dayjs.Dayjs): Time {
+    let h = datetime.hour();
+    let m = datetime.minute();
+
+    return new Time(h, m)
+  }
 
   toString() {
     return `${this.hours}:${this.minutes.toString().padStart(2, '0')}`

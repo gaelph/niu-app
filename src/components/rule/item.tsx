@@ -17,7 +17,7 @@ import { text, flex, h, v, m, p } from '../../theme/styles'
 import Colors from '../../theme/colors'
 
 import { Rule, Schedule } from '../../api/models/rule'
-import { Day, DayShortNames, DayFromNumber, sortDays, dayToInt } from '../../api/types'
+import { Day, DayShortNames, sortDays } from '../../api/types'
 import Time from '../../support/time'
 
 import TimeBar from '../time-bar'
