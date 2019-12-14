@@ -16,7 +16,7 @@ import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 import { StatusBar, useDimensions } from '../support/dimensions'
 
-import Settings, { AWAY_TEMPERATURE, TIMEZONE_OFFET } from '../settings'
+import Settings, { DEFAULT_TARGET, AWAY_TEMPERATURE, TIMEZONE_OFFET } from '../settings'
 
 import AppBar from '../components/app-bar'
 import TemperatureView from '../components/temperature-view'
@@ -41,13 +41,17 @@ export function Home() {
 
   let [rules, setRules] = useState([])
 
-  let [defaultTemperature, setDefaultTemperature] = useState<string | number>('')
+  let [awayTemperature, setAwayTemperature] = useState<string | number>('')
+  let [defaultTarget, setDefaultTarget] = useState<string | number>('')
   let [timezoneOffset, setTimezoneOffset] = useState<number>(new Date().getTimezoneOffset() * 60)
   let [deviceState, setDeviceState] = useState<CurrentState>()
 
   useEffect(() => {
     Settings.get(AWAY_TEMPERATURE)
-    .then(setDefaultTemperature)
+    .then(setAwayTemperature)
+
+    Settings.get(DEFAULT_TARGET)
+    .then(setDefaultTarget)
 
     Settings.get(TIMEZONE_OFFET)
     .then(setTimezoneOffset)
@@ -68,7 +72,7 @@ export function Home() {
     return () => {
       clearTimeout(refreshTimeout)
     }
-  }, [rules, defaultTemperature, timezoneOffset])
+  }, [rules, awayTemperature, timezoneOffset])
   
   useEffect(() => {
     getRules()
@@ -154,12 +158,12 @@ export function Home() {
             <Text style={styles.text}>An error occurred</Text>
           }
           { latestRecord &&
-            <TemperatureView record={latestRecord} defaultTemperature={defaultTemperature as number} deviceState={deviceState} />
+            <TemperatureView record={latestRecord} defaultTemperature={awayTemperature as number} deviceState={deviceState} />
           }
           { records &&
             <RecordsChart records={records.items as TemperatureRecord[]} />
           }
-          <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} defaultTemperature={defaultTemperature} />
+          <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} defaultTemperature={defaultTarget} />
           {/* <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} /> */}
         </View>
       </ScrollView>
