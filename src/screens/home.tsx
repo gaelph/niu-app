@@ -152,7 +152,7 @@ export function Home() {
 
   let addOrUpdateOverride = useCallback((override, update) => {
     let error
-    if (override !== null && update !== null) {
+    if (override === null && update !== null) {
       let { value, untilTime } = update
       let override: Override = Override.new(value, untilTime)
       let result = addOverrideMutation(override)
@@ -164,10 +164,10 @@ export function Home() {
       setOverride(null)
       error = result.error
     }
-    else {
+    else if (override !== null) {
       let { value, untilTime } = update
       override.value = parseInt(value, 10)
-      override.untilTime = untilTime.utc().toISOString()
+      override.untilTime = untilTime.utc()
       let result = updateOverrideMutation(override)
       setOverride(override)
       error = result.error

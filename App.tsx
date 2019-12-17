@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
+import { ErrorRecovery } from 'expo';
+
+import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
 import { NativeRouter, Route, nativeHistory, BackButton, Switch } from 'react-router-native'
 import { AnimatedChild } from './AnimateChild'
 import * as screens from './src/screens'
@@ -7,10 +9,31 @@ import * as screens from './src/screens'
 import Colors from './src/theme/colors'
 import { useFonts } from './src/theme/fonts'
 
+ErrorUtils.setGlobalHandler((error) => {
+  ErrorRecovery.setRecoveryProps({ error })
 
-export default function App() {
+  Alert.alert(
+    error.message,
+    error.stack,
+    [
+      { text: 'OK'}
+    ]
+  )
+})
+
+
+export default function App({ error: previousError }) {
   let [loaded, loading, error] = useFonts()
 
+  if (previousError) {
+    Alert.alert(
+      'Error',
+      previousError.message,
+      [
+        { text: 'OK'}
+      ]
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container}>
