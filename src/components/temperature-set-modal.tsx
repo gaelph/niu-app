@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, Modal, TouchableNativeFeedback as Touchable, StyleSheet } from 'react-native'
 import Button from './button'
+import TemperaturePicker from './temperature-picker'
 
 import Colors from '../theme/colors'
 
@@ -23,9 +24,7 @@ export function TemperatureSetModal({ visible, onValueChange, onClose, value, ch
       </Text>
       <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
         <View style={styles.inputContainer}>
-          <TextInput value={high} onChangeText={setHigh} autoFocus
-           style={[styles.input, styles.high]} keyboardType='numeric' maxLength={3} onSubmitEditing={() => onValueChange(high)} />
-          <Text style={[styles.input, styles.high]}>˚</Text>
+          <TemperaturePicker value={high.toString()} onValueChange={value => setHigh(value)} />
         </View>
       </View>
       <View style={{ flexDirection: 'row', width: '100%', alignItems: 'flex-end'}}>
@@ -89,9 +88,6 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    borderColor: Colors.border,
-    borderStyle: 'solid',
-    borderBottomWidth: 1,
     margin: 8,
     padding: 8
   },
