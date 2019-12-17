@@ -41,7 +41,7 @@ async function getSetting({ id, type, defaultValue }: SettingParam): Promise<any
 }
 
 async function setSetting({ id, title, description }: SettingParam, value: any): Promise<void> {
-  let setting = new Setting(id, title, description, value)
+  let setting = new Setting(id, title, description, value.toString())
   
   try {
     await updateSetting(setting)

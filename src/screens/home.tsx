@@ -151,7 +151,6 @@ export function Home() {
   }, [rules])
 
   let addOrUpdateOverride = useCallback((override, update) => {
-    console.log('addOrUpdateOverride', override, update)
     let error
     if (override !== null && update !== null) {
       let { value, untilTime } = update
@@ -176,8 +175,6 @@ export function Home() {
 
     showMessage(error)
   }, [rules, override])
-
-  console.log('override', override)
 
   const scrollToRef = useCallback(inputRef => {
     inputRef.current.measure((x, _y, _w, _h, _px, py) => {

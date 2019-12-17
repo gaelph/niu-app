@@ -38,6 +38,8 @@ const AwayTemperatureComponent = ({ title, description }: ListItem): React.React
     setValue(value)
   }, [])
 
+  console.log('AwayTemperatureComponent', value)
+
   return (
     <Touchable onPress={() => setShowModal(true)}>
       <View style={[styles.item, h.justifyLeft, h.alignStart]}>
@@ -75,6 +77,8 @@ const DefaultTargetComponent = ({ title, description }: ListItem): React.ReactEl
     await SettingsStore.set(DEFAULT_TARGET, value)
     setValue(value)
   }, [])
+
+  console.log('AwayTemperatureComponent', value)
 
   return (
     <Touchable onPress={() => setShowModal(true)}>

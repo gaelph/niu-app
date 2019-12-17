@@ -8,6 +8,12 @@ import Colors from '../theme/colors'
 export function TemperatureSetModal({ visible, onValueChange, onClose, value, children }) {
   let [high, setHigh] = useState(value.toString())
 
+  useEffect(() => {
+    setHigh(value.toString())
+  }, [value])
+
+  console.log('TemperatureSetModal', value, high)
+
   return <Modal
     visible={visible}
     onRequestClose={() => onValueChange(high)}

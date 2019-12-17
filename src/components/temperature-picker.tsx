@@ -28,6 +28,8 @@ export default function TemperaturePicker({ value, onValueChange }: TemperatureP
     }
   }, [onValueChange])
 
+  console.log('TemperaturePicker', value)
+
   return (
     <View style={[h.center, h.alignMiddle]}>
       <IconButton style={styles.round} name="minus" provider={Feather} onPress={decrement} size={18} color={Colors.grey} />
