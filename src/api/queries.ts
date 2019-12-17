@@ -10,6 +10,7 @@ import {
 import { TemperatureRecord } from './models/temperature-record'
 import { Rule } from './models/rule'
 import { Setting } from './models/setting'
+import { Override } from './models/override'
 
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -43,7 +44,12 @@ let REMOTE_FUNCTIONS = {
   "deleteRule": 1,
 
   "listSettings": 0,
-  "updateSetting": 1
+  "updateSetting": 1,
+
+  "createOverride": 1,
+  "getOverride": 0,
+  "updateOverride": 1,
+  "deleteOverride": 1,
 }
 
 function buildQueries(): Queries {
@@ -179,6 +185,60 @@ export async function updateSetting(setting: Setting): Promise<any> {
 
     return setting
   } else {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function createOverride(override: Override): Promise<any> {
+  const result: ApiResponse<Override> = await queries.createOverride(override)
+
+  if (result.success) {
+    let override = Override.from(result.data)
+
+    return override
+  }
+  else {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function getOverride(): Promise<Override> {
+  const result: ApiResponse<Override> = await queries.getOverride()
+
+  if (result.success) {
+    let override = Override.from(result.data)
+
+    return override
+  }
+  else {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function updateOverride(override: Override): Promise<any> {
+  const result: ApiResponse<Override> = await queries.updateOverride(override)
+
+  if (result.success) {
+    let override = Override.from(result.data)
+
+    return override
+  }
+  else {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function deleteOverride(override: Override): Promise<void> {
+  const result: ApiResponse<undefined> = await queries.deleteOverride(override)
+
+  if (result.success) {
+    return
+  }
+  else {
     console.error(result.error)
     throw new Error(result.error)
   }

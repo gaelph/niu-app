@@ -8,7 +8,7 @@ import {
   RefreshControl,
   ToastAndroid,
 } from 'react-native';
-import { getRules, getList, createRule, updateRule, deleteRule, useApiPolling, useApi, useMutation, } from '../api'
+import { getRules, getList, createRule, updateRule, deleteRule, useApiPolling, createOverride, getOverride, updateOverride, deleteOverride, useMutation, } from '../api'
 import { ListCursor } from '../api/types'
 import { Dimensions as Dim } from 'react-native'
 
@@ -26,6 +26,7 @@ import Rules from '../components/rule/list'
 
 import { TemperatureRecord } from '../api/models/temperature-record'
 import { Rule, Schedule } from '../api/models/rule'
+import { Override } from '../api/models/override'
 
 import { CurrentState, currentDeviceState } from '../rules'
 
@@ -39,7 +40,8 @@ export function Home() {
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000, new ListCursor(1, 300))
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
 
-  let [rules, setRules] = useState([])
+  let [rules, setRules] = useState<Rule[]>([])
+  let [override, setOverride] = useState<Override>(null)
 
   let [awayTemperature, setAwayTemperature] = useState<string | number>('')
   let [defaultTarget, setDefaultTarget] = useState<string | number>('')
@@ -81,9 +83,20 @@ export function Home() {
     })
   }, [])
 
+  useEffect(() => {
+    getOverride()
+    .then(override => {
+      setOverride(override)
+    })
+  }, [])
+
   let addRuleMutation = useMutation<Rule, Rule>(createRule)
   let updateRuleMutation = useMutation<Partial<Rule>, Rule>(updateRule)
   let deleteRuleMutation = useMutation<Rule, void>(deleteRule)
+
+  let addOverrideMutation = useMutation<Override, Override>(createOverride)
+  let updateOverrideMutation = useMutation<Override, Override>(updateOverride)
+  let deleteOverrideMutation = useMutation<Override, void>(deleteOverride)
 
   let showErrorMessage = useCallback(() => {
     ToastAndroid.show('An error occurred', ToastAndroid.SHORT)
@@ -137,6 +150,35 @@ export function Home() {
     showMessage(error)
   }, [rules])
 
+  let addOrUpdateOverride = useCallback((override, update) => {
+    console.log('addOrUpdateOverride', override, update)
+    let error
+    if (override !== null && update !== null) {
+      let { value, untilTime } = update
+      let override: Override = Override.new(value, untilTime)
+      let result = addOverrideMutation(override)
+      setOverride(override)
+      error = result.error
+    }
+    else if (update === null) {
+      let result = deleteOverrideMutation(override)
+      setOverride(null)
+      error = result.error
+    }
+    else {
+      let { value, untilTime } = update
+      override.value = parseInt(value, 10)
+      override.untilTime = untilTime.utc().toISOString()
+      let result = updateOverrideMutation(override)
+      setOverride(override)
+      error = result.error
+    }
+
+    showMessage(error)
+  }, [rules, override])
+
+  console.log('override', override)
+
   const scrollToRef = useCallback(inputRef => {
     inputRef.current.measure((x, _y, _w, _h, _px, py) => {
       setTimeout(() => {
@@ -158,13 +200,12 @@ export function Home() {
             <Text style={styles.text}>An error occurred</Text>
           }
           { latestRecord &&
-            <TemperatureView record={latestRecord} defaultTemperature={awayTemperature as number} deviceState={deviceState} />
+            <TemperatureView record={latestRecord} defaultTemperature={awayTemperature as number} deviceState={deviceState} override={override} onOverride={addOrUpdateOverride} />
           }
           { records &&
             <RecordsChart records={records.items as TemperatureRecord[]} />
           }
           <Rules rules={rules} onStartEditing={scrollToRef} onChange={changeRule} onRemove={removeRule} defaultTemperature={defaultTarget} />
-          {/* <RuleList rules={rules} onReady={add => addRule = add} onEdit={onEdit} /> */}
         </View>
       </ScrollView>
       <PlusButton onPress={addRule}/>
