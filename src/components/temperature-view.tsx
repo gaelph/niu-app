@@ -32,6 +32,7 @@ type TemperatureViewProps = {
   record: TemperatureRecord
   defaultTemperature: number
   deviceState: CurrentState
+  boilerStatus: boolean
   override: Override
   onOverride: (override, update: { value: number, untilTime: dayjs.Dayjs }) => void
 }
@@ -66,7 +67,7 @@ function displayDeviceState({ current, nextChange }: CurrentState, defaultTemper
   return `${current.schedule.high}˚ until ${displayDatetime(nextChange)}`
 }
 
-export default function TemperatureView({ record, defaultTemperature, deviceState, override, onOverride }: TemperatureViewProps): React.ReactElement {
+export default function TemperatureView({ record, defaultTemperature, boilerStatus, deviceState, override, onOverride }: TemperatureViewProps): React.ReactElement {
   const scheduleString = displayDeviceState(deviceState, defaultTemperature)
 
   const overrideActive: boolean = useMemo(() => {
@@ -89,9 +90,16 @@ export default function TemperatureView({ record, defaultTemperature, deviceStat
         untilTime: deviceState.nextChange
       }
 
+  const indicatorStyle = boilerStatus
+      ? styles.statusIndicatorOn
+      : styles.statusIndicatorOff
+
   return (
     <View style={styles.content}>
       <View style={styles.tempView}>
+        <View style={styles.indicatorContainer} >
+          <View style={[styles.statusIndicator, indicatorStyle]} collapsable={false}></View>
+        </View>
         <Text style={[styles.text, styles.temp]}>{temp.integer(record.value)}</Text>
         <Text style={[styles.text, styles.tempUnit]}>˚</Text>
         <Text style={[styles.text, styles.tempDecimals]}>.{temp.decimals(record.value)}</Text>
@@ -126,6 +134,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     marginBottom: -4
+  },
+  indicatorContainer: {
+    paddingBottom: 12,
+    paddingRight: 4
+  },
+  statusIndicator: {
+    width: 12,
+    height: 12,
+    marginBottom: 8, 
+    overflow: 'hidden',
+    borderRadius: 6
+  },
+  statusIndicatorOn: {
+    backgroundColor: Colors.accent,
+    opacity: 1
+  },
+  statusIndicatorOff: {
+    backgroundColor: Colors.foreground,
+    opacity: 0.3
   },
   temp: {
     fontSize: 96,

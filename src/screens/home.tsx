@@ -8,7 +8,7 @@ import {
   RefreshControl,
   ToastAndroid,
 } from 'react-native';
-import { getRules, getList, createRule, updateRule, deleteRule, useApiPolling, createOverride, getOverride, updateOverride, deleteOverride, useMutation, } from '../api'
+import { getRules, getList, createRule, updateRule, deleteRule, useApiPolling, createOverride, getOverride, getBoilerStatus, updateOverride, deleteOverride, useMutation, } from '../api'
 import { ListCursor } from '../api/types'
 import { Dimensions as Dim } from 'react-native'
 
@@ -39,6 +39,7 @@ export function Home() {
 
   const { data: records, loading, error, refresh } = useApiPolling(getList, 60 * 1000, new ListCursor(1, 300))
   const latestRecord = (records ? records.items[0]: null) as TemperatureRecord
+  const boilerStatus = useApiPolling(getBoilerStatus, 30 * 1000)
 
   let [rules, setRules] = useState<Rule[]>([])
   let [override, setOverride] = useState<Override>(null)
@@ -197,7 +198,7 @@ export function Home() {
             <Text style={styles.text}>An error occurred</Text>
           }
           { latestRecord &&
-            <TemperatureView record={latestRecord} defaultTemperature={awayTemperature as number} deviceState={deviceState} override={override} onOverride={addOrUpdateOverride} />
+            <TemperatureView record={latestRecord} defaultTemperature={awayTemperature as number} deviceState={deviceState} boilerStatus={boilerStatus.data as boolean} override={override} onOverride={addOrUpdateOverride} />
           }
           { records &&
             <RecordsChart records={records.items as TemperatureRecord[]} />

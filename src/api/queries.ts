@@ -50,6 +50,9 @@ let REMOTE_FUNCTIONS = {
   "getOverride": 0,
   "updateOverride": 1,
   "deleteOverride": 1,
+
+  "getLatestEventType": 1,
+  "getAllEventsType": 1
 }
 
 function buildQueries(): Queries {
@@ -237,6 +240,19 @@ export async function deleteOverride(override: Override): Promise<void> {
 
   if (result.success) {
     return
+  }
+  else {
+    console.error(result.error)
+    throw new Error(result.error)
+  }
+}
+
+export async function getBoilerStatus(): Promise<boolean> {
+  const result: ApiResponse<{ value: string }> = await queries.getLatestEventType({ type: "BoilerStatus" })
+
+  if (result.success) {
+    let status = result.data.value === "true"
+    return status
   }
   else {
     console.error(result.error)
