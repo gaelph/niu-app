@@ -24,7 +24,7 @@ export class Hold {
       || ! Object.prototype.hasOwnProperty.call(object, 'untilTime')
     ) throw new Error('Invalid object passed to Hold.fromObject')
 
-    return new Hold(object.id, parseInt(object.value, 10), dayjs(object.untilTime).utc())
+    return new Hold(object.id, parseInt(object.value, 10), dayjs(object.untilTime))
   }
 
   static fromString(string: string): Hold {

@@ -31,6 +31,7 @@ export function useRules(options?: RulesOptions): RuleHook {
       const { listRules: rules } = cache.readQuery({
         query: queries.fetchRules
       })
+      console.log('writeQuery')
       cache.writeQuery({
         query: queries.fetchRules,
         data: {
@@ -100,7 +101,7 @@ export function useCurrentSchedule(): CurrentState | {} {
   const interval = useRef<number>()
   const [currentSchedule, setCurrentSchedule] = useState<CurrentState>({})
 
-  let getSchedule = useCallback(() => {
+  let getSchedule = useCallback(async () => {
     if (Settings && rules) {
       const timezone = Settings.get(TIMEZONE_OFFSET)
   
@@ -109,7 +110,9 @@ export function useCurrentSchedule(): CurrentState | {} {
     }
   }, [Settings, rules])
 
-  useEffect(getSchedule, [])
+  useEffect(() => {
+    getSchedule()
+  }, [Settings])
 
   useEffect(() => {
     if (interval.current) clearInterval(interval.current)
@@ -117,7 +120,7 @@ export function useCurrentSchedule(): CurrentState | {} {
     interval.current = setInterval(getSchedule, 60 * 1000) as unknown as number
 
     return () => clearInterval(interval.current)
-  }, [getSchedule])
+  }, [])
 
   return currentSchedule
 }

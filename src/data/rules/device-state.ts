@@ -10,12 +10,17 @@ function sepearateRepeatAndNonRepeat(rules: Rule[], datetime: dayjs.Dayjs): [Rul
   let repeat: Rule[] = []
   let nonRepeat: Rule[] = []
 
-  rules.forEach(rule => {
-    if (!rule.active) return
+  let weekday = datetime.weekday() - 1;
+  weekday < 0 && (weekday = 6)
+  console.log('rules active on', datetime, weekday)
+
+  rules
+  .filter(rule => rule.active)
+  .forEach(rule => {
+    // if (!rule.active) return
 
     if (rule.repeat) {
-      let weekay = datetime.weekday() - 1;
-      if (rule.days[weekay])
+      if (rule.days[weekday])
         repeat.push(rule)
     }
     else {
@@ -63,7 +68,11 @@ function findSchedule(rules: Rule[], datetime: dayjs.Dayjs): CurrentState {
     return rule_schedule
   }))
 
-  if (schedules.length === 0) return { current: null, nextChange: null }
+  console.log('found', schedules.length, 'schedules on', datetime)
+
+  if (schedules.length === 0) return null
+
+  console.log('found', schedules[0])
 
   if (isCurrentSchedule(schedules[0].schedule, datetime)) {
     // A schedule is currently being applied
@@ -137,12 +146,19 @@ export function currentDeviceState(rules: Rule[], timezoneOffset: number): Curre
     }
     
     let [repeat, nonRepeat] = sepearateRepeatAndNonRepeat(rules, datetime);
+
+    console.log('repeat', repeat.map(r => r.name));
+    console.log('non-repeat', nonRepeat.map(r => r.name));
   
     if (nonRepeat.length > 0) {
-      return findSchedule(nonRepeat, datetime)
+      let schedule = findSchedule(nonRepeat, datetime)
+
+      if (schedule) return schedule
     }
     else if (repeat.length > 0) {
-      return findSchedule(repeat, datetime)
+      let schedule = findSchedule(repeat, datetime)
+
+      if (schedule) return schedule
     }
   }
 

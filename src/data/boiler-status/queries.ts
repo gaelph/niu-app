@@ -7,3 +7,37 @@ query FetchBoilerStatus {
     value
   }
 }`
+
+export const fetchBoilerStatusHistory = gql`
+query FetchBoilerStatusHistory {
+  getAllEventsType(type: BOILER_STATUS) {
+    id
+    value
+    createdOn
+  }
+}
+`
+
+export const setSince = gql`
+mutation SetBoilerStatusSince($since: String) {
+  setBoilerStatusSince(since: $since) @client
+}
+`
+
+export const getSince = gql`
+query GetBoilerStatusSince {
+  boilerStatusSince @client
+}
+`
+
+export const resolvers = {
+  Mutation: {
+    setSince: (_root, { since }: { since: String }, { cache }) => {
+      cache.writeData({ data: { boilerStatusSince: since } });
+    }
+  }
+}
+
+export const initialState = {
+  boilerStatusSince: (new Date(0)).toISOString()
+}

@@ -8,14 +8,16 @@ import { DayFromNumber } from '../../support/days'
 import Toast from '../../support/toast'
 
 import { useHold } from '../../data/hold/hooks'
-import { useCurrentSchedule } from '../../data/rules/hooks'
+import { useRules } from '../../data/rules/hooks'
+import { currentDeviceState } from '../../data/rules/device-state'
 import { CurrentState } from '../../data/rules/device-state'
 import { useSettings, AWAY_TEMPERATURE, TIMEZONE_OFFSET } from '../../data/settings/hooks'
 
 import { HoldModal } from './HoldModal'
 
 function displayDatetime(datetime: dayjs.Dayjs, timezone: number): string {
-  const datetimeWithZone = datetime.add(timezone / 60, 'minute')
+
+  const datetimeWithZone = datetime.utc().add(timezone / 60, 'minute')
   const hours = datetimeWithZone.hour().toString()
   const minutes = datetimeWithZone.minute().toString().padStart(2, '0')
 
@@ -42,7 +44,7 @@ function displayDatetime(datetime: dayjs.Dayjs, timezone: number): string {
 }
 
 function displayDeviceState({ current, nextChange }: CurrentState, defaultTemperature: number = 15, timezone: number): string {
-  if (!current && !nextChange) return ''
+  if (!current && !nextChange) return `${defaultTemperature}˚`
 
   if (!current) {
     return `${defaultTemperature}˚ until ${displayDatetime(nextChange, timezone)}`
@@ -64,11 +66,15 @@ export function HoldButton () {
       Toast.showError()
     }
   })
-  
-  const currentSchedule = useCurrentSchedule()
+
+  const { rules } = useRules()
   const Settings = useSettings()
   const awayTemperature = Settings.get(AWAY_TEMPERATURE)
   const timezone = Settings.get(TIMEZONE_OFFSET)
+
+  const currentSchedule = useMemo(() => {
+    return currentDeviceState(rules, timezone)
+  }, [awayTemperature, timezone, rules])
 
   const holdActive = useMemo(() => {
     return hold

@@ -1,12 +1,12 @@
-import React, { useMemo, useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native'
-import { Dimensions as Dim } from 'react-native'
+import React, { useMemo } from 'react';
+import { View } from 'react-native'
 
-import { AreaChart, Grid, YAxis, XAxis } from 'react-native-svg-charts'
+import { AreaChart, LineChart, Grid, YAxis, XAxis } from 'react-native-svg-charts'
 import { LinearGradient, Defs, Stop, Path } from 'react-native-svg'
 import * as shape from 'd3-shape'
 
 import { TemperatureRecord } from '../../data/temperature-records/model'
+import { BoilerStatus } from '../../data/boiler-status/model'
 
 import Colors from '../../theme/colors'
 import Dimensions from '../../theme/dimensions'
@@ -39,6 +39,7 @@ const HOUR   = 60 * MINUTE
 
 interface RecordsChartProps {
   records: TemperatureRecord[]
+  boilerStatusHistory: BoilerStatus[]
 }
 
 function minMax(records: TemperatureRecord[]): TemperatureRecord[] {
@@ -74,12 +75,71 @@ function minMax(records: TemperatureRecord[]): TemperatureRecord[] {
   return minAndMax
 }
 
-export default function RecordsChart({ records }: RecordsChartProps) {
+interface StatusRange {
+  records: TemperatureRecord[]
+  value: boolean
+  from: Date
+  to: Date
+}
+
+function makeStatusRanges(statuses: BoilerStatus[]): StatusRange[] {
+  let result = []
+  const statusStack = [...statuses]
+
+  let status = statusStack.pop()
+  let nextStatus = statusStack.pop()
+
+  if (status) {
+    do {
+      while (nextStatus && status.value === nextStatus.value) {
+        nextStatus = statusStack.pop()
+      }
+
+      let range = {
+        value: status.value,
+        records: [],
+        from: status.createdOn.toDate(),
+        to: nextStatus
+          ? nextStatus.createdOn.toDate()
+          : new Date()
+      }
+
+      result.push(range)
+
+      status = nextStatus
+      nextStatus = statusStack.pop()
+    }
+    while (status && statusStack.length >= 0)
+}
+
+  return result
+}
+
+function putRecordsInRanges(records: TemperatureRecord[], ranges: StatusRange[]) : StatusRange[] {
+
+  return ranges.map((range) => {
+    const recordsInRange = records.filter((record) => {
+      return record.createdOn >= range.from && record.createdOn <= range.to
+    })
+
+    return {
+      ...range,
+      records: recordsInRange
+    }
+  })
+}
+
+export default function RecordsChart({ records, boilerStatusHistory }: RecordsChartProps) {
   const { width } = useDimensions('window')
   const chartWidth = width - 2 * Dimensions.padding
 
-  const [values, dates, bound] = useMemo(() => {
-    if (records.length === 0) return [[], [], { max: 25, min: 0 }]
+  let ranges = makeStatusRanges(boilerStatusHistory)
+  ranges = putRecordsInRanges(records, ranges)
+
+  console.log('found', ranges.length, 'ranges')
+
+  const [values, dates, Ybound, Xbound] = useMemo(() => {
+    if (records.length === 0) return [[], [], { max: 25, min: 0 }, { max: 0, min: 0 }]
     records = [...records].sort((a: TemperatureRecord, b: TemperatureRecord) => +a.createdOn - +b.createdOn)
     let latest = records[records.length - 1].createdOn
     let recent = records
@@ -90,43 +150,75 @@ export default function RecordsChart({ records }: RecordsChartProps) {
     let values = recent.map(r => r.value)
     let dates = recent.map(r => r.createdOn)
     
-    let bound = {
+    let Ybound = {
       max: Math.max(...values) + 0.5,
       min: 5 // Math.min(...values) - 2
     }
 
-    return [recent, dates, bound]
+    let Xbound = {
+      min: +dates[0],
+      max: +dates[dates.length - 1]
+    }
+
+    return [recent, dates, Ybound, Xbound]
   }, [records, width])
 
   return (
     <View style={{ paddingLeft: 30, marginTop: 20, width }}>
       <View style={{ flexDirection: 'row', flex: 1 }}>
+        <View style={{width: chartWidth, height: 110, position: 'relative'}}>
         <AreaChart
-          style={{ height: 110, width: chartWidth }}
+          style={{ height: 110, width: chartWidth, position: 'absolute' }}
           data={ values }
           yAccessor={({ item }) => item.value}
           xAccessor={({ item }) => +item.createdOn}
           curve={ shape.curveMonotoneX }
           svg={{ fill: 'url(#grad1)' }}
-          yMin={bound.min}
-          yMax={bound.max}
-          gridMin={bound.min}
-          gridMax={bound.max}
-          start={bound.min}
+          yMin={Ybound.min}
+          yMax={Ybound.max}
+          xMin={Xbound.min}
+          xMax={Xbound.max}
+          gridMin={Ybound.min}
+          gridMax={Ybound.max}
+          start={Ybound.min}
           numberOfTicks={3}
-          contentInset={{ top: 20 }}
+          contentInset={{ top: 20, bottom: 0 }}
         >
           <Grid belowChart={false} svg={{ strokeOpacity: 0.15 }} />
           <Line />
           <Gradient />
-        </AreaChart>
+        </AreaChart> 
+        { ranges
+          .filter(r => r.value && r.records.length > 0)
+          .map(range => (
+          <LineChart
+            key={`${range.from}-${range.to}`}
+            style={{ height: 110, width: chartWidth, position: 'absolute' }}
+            data={[
+              +range.from,
+              +range.to
+            ]}
+            yAccessor={_ => Ybound.min}
+            xAccessor={({ item }) => item}
+            curve={ shape.curveLinear }
+            svg={{ stroke: 'orange', strokeWidth: 4 }}
+            yMin={Ybound.min}
+            yMax={Ybound.max}
+            xMin={Xbound.min}
+            xMax={Xbound.max}>
+            </LineChart>
+          ))
+        }
+        </View>
         <YAxis data={values} 
         numberOfTicks={3} 
         formatLabel={(v) => `${Math.round(v * 10) / 10}˚`} 
         style={{ marginLeft: 8 }}
-        contentInset={{ top: 20, bottom: 0 }}
-        min={bound.min}
-        max={bound.max}
+        contentInset={{ top: 20, bottom: 4 }}
+        // min={0}
+        // max={20}
+        min={Ybound.min}
+        max={Ybound.max}
         svg={{ fontSize: 10, fill: Colors.foreground }} />
       </View>
       <XAxis data={values} numberOfTicks={3} formatLabel={(v) => {

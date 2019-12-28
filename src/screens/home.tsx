@@ -20,7 +20,7 @@ import PlusButton from '../components/rule/PlusButton'
 import RuleList from '../components/rule/List'
 
 import { useTemperatureRecords } from '../data/temperature-records/hooks'
-import { useBoilerStatus } from '../data/boiler-status/hooks'
+import { useBoilerStatus, useBoilerStatusHistory } from '../data/boiler-status/hooks'
 import { useSettings, DEFAULT_TARGET } from '../data/settings/hooks'
 import { useRules } from '../data/rules/hooks'
 
@@ -34,6 +34,7 @@ export function Home() {
 
   const Records = useTemperatureRecords()
   const BoilerStatus = useBoilerStatus()
+  const BoilerStatusHistory = useBoilerStatusHistory()
   const Settings = useSettings()
 
   const Rules = useRules({
@@ -49,9 +50,14 @@ export function Home() {
   const refresh = useCallback(() => {
     Records.fetchMore()
     BoilerStatus.refresh()
-  }, [Records, BoilerStatus])
+    BoilerStatusHistory.refresh()
+  }, [Records, BoilerStatus, BoilerStatusHistory])
 
-  const appLoading = Records.loading || Rules.loading || Settings.loading || BoilerStatus.loading
+  const appLoading = Records.loading 
+    || Rules.loading
+    || Settings.loading 
+    || BoilerStatus.loading
+    || BoilerStatusHistory.loading
 
   let defaultTarget = Settings.get(DEFAULT_TARGET)
 
@@ -72,7 +78,7 @@ export function Home() {
           <AppBar />
           <TemperatureView record={Records.latest()} boilerStatus={BoilerStatus.status} />
           <HoldButton />
-          <RecordsChart records={Records.records} />
+          <RecordsChart records={Records.records} boilerStatusHistory={BoilerStatusHistory.statuses} />
           <RuleList rules={Rules.rules} onStartEditing={scrollToRef} onChange={Rules.update} onRemove={Rules.remove} defaultTemperature={defaultTarget} />
         </View>
       </ScrollView>

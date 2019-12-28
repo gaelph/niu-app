@@ -51,10 +51,12 @@ export function useHold({ onMutationSuccess, onMutationError }): HoldResult | nu
   const updateHold = useCallback((hold: Hold) => {
     // Query returned no hold, but called with one ? create it
     if (hold != null && !data.getHold) {
+      hold.untilTime = hold.untilTime.utc()
       create({ variables: { hold } })
     }
     // Query return a hold, and called with one ? update it
     else if (hold != null && data.getHold) {
+      hold.untilTime = hold.untilTime.utc()
       update({ variables: { hold } })
     }
     // Query returned a hold, but called with none ? delete it
