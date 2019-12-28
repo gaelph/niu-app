@@ -3,6 +3,7 @@
     "name": "Niu",
     "slug": "nezh-app",
     "privacy": "unlisted",
+    "backgroundColor": "#fcf9ea",
     "sdkVersion": "35.0.0",
     "platforms": [
       "ios",

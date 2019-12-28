@@ -2,7 +2,6 @@ import React from 'react';
 import { ErrorRecovery } from 'expo';
 
 import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
-import { NativeRouter, Route, BackButton, Switch } from 'react-router-native'
 
 import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
@@ -39,7 +38,10 @@ const AppNavigator = createStackNavigator({
     screen: Settings
   }
 }, {
-  headerMode: 'none'
+  headerMode: 'none',
+  cardStyle: {
+    backgroundColor: Colors.background
+  }
 });
 
 const AppContainer = createAppContainer(AppNavigator);
