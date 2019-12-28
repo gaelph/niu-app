@@ -3,6 +3,10 @@ import { ErrorRecovery } from 'expo';
 
 import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
 import { NativeRouter, Route, BackButton, Switch } from 'react-router-native'
+
+import { createAppContainer } from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
+
 import { Home, Settings } from './src/screens'
 
 import Colors from './src/theme/colors'
@@ -27,6 +31,19 @@ ErrorUtils.setGlobalHandler((error) => {
   )
 })
 
+const AppNavigator = createStackNavigator({
+  Home: {
+    screen: Home,
+  },
+  Settings: {
+    screen: Settings
+  }
+}, {
+  headerMode: 'none'
+});
+
+const AppContainer = createAppContainer(AppNavigator);
+
 
 export default function App({ error: previousError }) {
   let [loaded, error] = useFonts()
@@ -49,14 +66,7 @@ export default function App({ error: previousError }) {
         <>
           <ApolloProvider client={client}>
             <StatusBar translucent={true} backgroundColor={'transparent'}/>
-            <NativeRouter>
-              <BackButton>
-                  <Switch>
-                    <Route path="/" exact component={Home} />
-                    <Route path="/settings" component={Settings} />
-                  </Switch>
-              </BackButton>
-            </NativeRouter>
+            <AppContainer />
           </ApolloProvider>
         </>
       }

@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { View, StyleSheet, Dimensions as Dim, Text } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
-import { useHistory } from 'react-router-native'
+import { withNavigation } from 'react-navigation'
 
 import IconButton from './buttons/IconButton'
 
@@ -11,14 +11,12 @@ import Dimensions from '../theme/dimensions'
 import { text, flex, m } from '../theme/styles'
 import { useDimensions } from '../support'
 
-export default function AppBar() {
+export default withNavigation(function SettingsBar({ navigation }) {
   let Screen = useDimensions('window')
-  let history = useHistory()
 
   let onPress = useCallback(() => {
-    history.replace('/')
-  }, [history])
-
+    navigation.goBack()
+  }, [navigation])
 
   return (
     <View style={[styles.container, { width: Screen.width }]}>
@@ -28,7 +26,7 @@ export default function AppBar() {
       </Text>
     </View>
   )
-}
+})
 
 const styles = StyleSheet.create({
   container: {

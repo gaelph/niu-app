@@ -8,6 +8,7 @@ import { StatusBar, useDimensions } from '../support/dimensions'
 import Toast from '../support/toast'
 
 import { h, v, text, flex } from '../theme/styles'
+import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 
 import { Setting } from '../data/settings/model'
@@ -162,7 +163,7 @@ export const Settings = () => {
     Settings.set(preset, value)
   }, [Settings])
 
-  return <View style={{ width: Screen.width, height: Screen.height, paddingTop: StatusBar.height }}>
+  return <View style={{ width: Screen.width, height: Screen.height, paddingTop: StatusBar.height, backgroundColor: Colors.background, }}>
     <SettingsBar />
     <FlatList
       data={items}
