@@ -1,5 +1,5 @@
 import React from 'react';
-import { ErrorRecovery } from 'expo';
+import ErrorRecovery from 'expo-error-recovery';
 
 import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
 

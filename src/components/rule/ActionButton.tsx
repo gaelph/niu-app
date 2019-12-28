@@ -21,7 +21,7 @@ export default function ActionButton({ onPress, icon, Provider, title, iconPosit
 
   return (
     <Touchable onPress={onPress}>
-      <View style={[flex, h.alignMiddle, p.v8, { justifyContent: `flex-${align}` }]}>
+      <View style={[flex, h.alignMiddle, p.v8, { justifyContent: `flex-${align}` as any }]}>
         {iconPosition === 'start' && <IconButton name={icon} size={16} color="gray" provider={Provider} />}
         <Text style={[{ color: 'gray' }, textSpacing]}>{title}</Text>
         {iconPosition === 'end' && <IconButton name={icon} size={16} color="gray" provider={Provider} />}

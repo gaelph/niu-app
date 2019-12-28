@@ -84,7 +84,6 @@ export function Home() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: Dimensions.padding,
     backgroundColor: Colors.background,
   },
   contentContainer: {
