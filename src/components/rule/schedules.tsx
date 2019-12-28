@@ -1,12 +1,12 @@
 import React, { useCallback } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
-import { Schedule } from '../../api/models/rule'
+import { Schedule } from '../../data/rules/model'
 
-import { TimeSelector } from './item'
-import TemperatureSetter from '../temperature-set-modal'
-import IconButton from '../icon-button'
+import { TimeSelector } from './Item'
+import TemperatureSetter from '../shared/TemperatureSetModal'
+import IconButton from '../buttons/IconButton'
 
 import { text, h, p } from '../../theme/styles'
 
@@ -16,7 +16,7 @@ type SchedulesProps = {
   onChange: (schedules: Schedule[]) => void
 }
 
-export default function Schedules({ id, schedules, onChange }) {
+export default function Schedules({ id, schedules, onChange }: SchedulesProps) {
 
   let updateSchedule = useCallback((idx, schedule) => {
     let updated = schedules.map((s, i) => {
@@ -31,7 +31,7 @@ export default function Schedules({ id, schedules, onChange }) {
   }, [schedules])
 
   let removeSchedule = useCallback(idx => {
-    let updated = schedules.map((_, i) => i !== idx)
+    let updated = schedules.filter((_, i) => i !== idx)
 
     onChange(updated)
   }, [schedules])
@@ -48,7 +48,12 @@ export default function Schedules({ id, schedules, onChange }) {
             <TimeSelector schedule={schedule} prop="to" onChange={(s) => updateSchedule(idx, s)} />
 
             {/* schedule temperature override */}
-            <TemperatureSetter value={schedule.high} onChange={value => updateSchedule(idx, {...schedule, high: value })} />
+            <TemperatureSetter 
+              value={schedule.high} 
+              defaultValue={20} 
+              message=""
+              onChange={value => updateSchedule(idx, {...schedule, high: value })}
+            />
 
             {/* Delete Schedule Button */}
             <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />

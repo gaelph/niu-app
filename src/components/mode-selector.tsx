@@ -5,9 +5,9 @@ import { FontAwesome5} from '@expo/vector-icons'
 
 import Colors from '../theme/colors'
 
-import IconButton from './icon-button'
+import IconButton from './buttons/IconButton'
 
-import { CurrentState } from '../rules/index'
+import { CurrentState } from '../data/rules/device-state'
 
 enum PillType {
   High = "sun",

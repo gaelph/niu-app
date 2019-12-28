@@ -16,3 +16,4 @@ web-report/
 .env
 builds/**/*
 yarn-error.log
+apollo.config.js

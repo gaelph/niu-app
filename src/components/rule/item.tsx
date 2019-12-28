@@ -11,18 +11,18 @@ dayjs.extend(relativeTime)
 dayjs.extend(utc)
 
 
-import IconButton from '../icon-button'
+import IconButton from '../buttons/IconButton'
 
 import { text, flex, h, v, m, p } from '../../theme/styles'
 import Colors from '../../theme/colors'
 
-import { Rule, Schedule } from '../../api/models/rule'
-import { Day, DayShortNames, sortDays } from '../../api/types'
+import { Rule, Schedule } from '../../data/rules/model'
+import { Day, DayShortNames, sortDays } from '../../support/days'
 import Time from '../../support/time'
 
-import TimeBar from '../time-bar'
-import TemperatureSetter from '../temperature-set-modal'
-import ActionButton from '../action-button'
+import TimeBar from './TimeBar'
+import TemperatureSetter from '../shared/TemperatureSetModal'
+import ActionButton from './ActionButton'
 
 
 export function FadeInOut({ duration, children }) {

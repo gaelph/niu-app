@@ -26,6 +26,9 @@ export const text = StyleSheet.create({
   bold: {
     fontFamily: 'Raleway-Bold'
   },
+  semiBold: {
+    fontFamily: 'Raleway-SemiBold'
+  },
   italic: {
     fontFamily: 'Raleway-MediumItalic'
   }

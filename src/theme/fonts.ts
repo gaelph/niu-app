@@ -1,6 +1,6 @@
 import * as Font from 'expo-font'
 import { useReducer, useEffect } from 'react'
-import * as ReducerTools from '../api/api-reducer'
+import { reducer, AsyncActions} from '../support/async-reducer'
 
 const fonts = {
   'Raleway-Black': require('../../assets/fonts/Raleway-Black.ttf'),
@@ -24,14 +24,14 @@ const fonts = {
 }
 
 export function useFonts() {
-  let [state, dispatch] = useReducer(...ReducerTools.reducer())
+  let [state, dispatch] = useReducer(...reducer())
 
   useEffect(() => {
-    dispatch({ type: ReducerTools.ApiActions.Fetching })
+    dispatch({ type: AsyncActions.Fetching })
     
     Font.loadAsync(fonts)
     .then(() => {
-      dispatch({ type: ReducerTools.ApiActions.Fetched, payload: true })
+      dispatch({ type: AsyncActions.Fetched, payload: true })
     })
   }, [])
 

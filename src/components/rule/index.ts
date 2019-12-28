@@ -1,5 +1,5 @@
-import List from './list'
-import Item from './item'
+import List from './List'
+import Item from './Item'
 
 export default {
   List,

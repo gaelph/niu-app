@@ -2,15 +2,21 @@ import React from 'react';
 import { ErrorRecovery } from 'expo';
 
 import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
-import { NativeRouter, Route, nativeHistory, BackButton, Switch } from 'react-router-native'
-import { AnimatedChild } from './AnimateChild'
-import * as screens from './src/screens'
+import { NativeRouter, Route, BackButton, Switch } from 'react-router-native'
+import { Home, Settings } from './src/screens'
 
 import Colors from './src/theme/colors'
 import { useFonts } from './src/theme/fonts'
 
+import useApolloClient from './graphql-client'
+import { ApolloProvider } from '@apollo/react-hooks';
+
+
+// Error handling
 ErrorUtils.setGlobalHandler((error) => {
   ErrorRecovery.setRecoveryProps({ error })
+
+  console.error(error)
 
   Alert.alert(
     error.message,
@@ -23,33 +29,35 @@ ErrorUtils.setGlobalHandler((error) => {
 
 
 export default function App({ error: previousError }) {
-  let [loaded, loading, error] = useFonts()
+  let [loaded, error] = useFonts()
+  const client = useApolloClient()
 
   if (previousError) {
+    console.error(error)
     Alert.alert(
-      'Error',
-      previousError.message,
-      [
-        { text: 'OK'}
-      ]
-    )
+        'Error',
+        previousError.message,
+        [
+          { text: 'OK'}
+        ]
+      )
   }
-
+  
   return (
     <SafeAreaView style={styles.container}>
-      {loaded &&
+      {loaded && client &&
         <>
-          <StatusBar translucent={true} backgroundColor={'transparent'}/>
-          <NativeRouter history={nativeHistory} addressBar>
-            <BackButton>
-              {/* <AnimatedChild> */}
-                <Switch>
-                  <Route path="/" exact component={screens.Home} />
-                  <Route path="/settings" component={screens.Settings} />
-                </Switch>
-              {/* </AnimatedChild> */}
-            </BackButton>
-          </NativeRouter>
+          <ApolloProvider client={client}>
+            <StatusBar translucent={true} backgroundColor={'transparent'}/>
+            <NativeRouter>
+              <BackButton>
+                  <Switch>
+                    <Route path="/" exact component={Home} />
+                    <Route path="/settings" component={Settings} />
+                  </Switch>
+              </BackButton>
+            </NativeRouter>
+          </ApolloProvider>
         </>
       }
     </SafeAreaView>

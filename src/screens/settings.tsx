@@ -1,44 +1,51 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, TouchableNativeFeedback as Touchable, StyleSheet, AsyncStorage } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, FlatList, TouchableNativeFeedback as Touchable, StyleSheet } from 'react-native';
+import { gql } from 'apollo-boost';
+import { useMutation } from '@apollo/react-hooks'
 
-import SettingsStore, { DEFAULT_TARGET, AWAY_TEMPERATURE } from '../settings'
 
 import { StatusBar, useDimensions } from '../support/dimensions'
+import Toast from '../support/toast'
 
-import { h, v, m, p, text, flex } from '../theme/styles'
+import { h, v, text, flex } from '../theme/styles'
 import Dimensions from '../theme/dimensions'
 
-import { useApi } from '../api'
-import { listSettings } from '../api/queries'
-import { Setting } from '../api/models/setting'
+import { Setting } from '../data/settings/model'
 
-import SettingsBar from '../components/settings-bar'
-import { TemperatureSetModal } from '../components/temperature-set-modal'
+import { useSettings, SettingParam, DEFAULT_TARGET, AWAY_TEMPERATURE } from '../data/settings/hooks'
+
+import SettingsBar from '../components/SettingsBar'
+import { TemperatureSetModal } from '../components/shared/TemperatureSetModal'
 
 const packageJson = require('../../package.json')
 
-const SettingItem = ({ title, description }: ListItem): React.ReactElement => (
+const RESET_MUTATION = gql`
+mutation ResetApp {
+  resetApp @client
+}
+`
+
+const SettingItem = ({ item: { title, description } }: { item: ListItem }): React.ReactElement => (
   <View style={[styles.item]}>
     <Text style={[text.default, text.primary]}>{title}</Text>
     <Text style={[text.default, text.small]}>{description}</Text>
   </View>
 )
 
-const AwayTemperatureComponent = ({ title, description }: ListItem): React.ReactElement => {
+const ResetAppItem = ({ item: { title, description } }: { item: ListItem }): React.ReactElement => {
+  const [resetApp, _ ] = useMutation(RESET_MUTATION)
+
+  return <Touchable onPress={() => resetApp()}>
+    <View style={[styles.item]}>
+      <Text style={[text.default, text.primary]}>{title}</Text>
+      <Text style={[text.default, text.small]}>{description}</Text>
+    </View>
+  </Touchable>
+}
+
+
+const TemperatureComponent = ({ item: { title, description, value }, onChange }: { item: ListItem, onChange: Function }): React.ReactElement => {
   let [showModal, setShowModal] = useState(false)
-  let [value, setValue] = useState('')
-
-  useEffect(() => {
-    SettingsStore.get(AWAY_TEMPERATURE)
-    .then(v => setValue(v))
-  })
-
-  let updateValue = useCallback(async value => {
-    await SettingsStore.set(AWAY_TEMPERATURE, value)
-    setValue(value)
-  }, [])
-
-  console.log('AwayTemperatureComponent', value)
 
   return (
     <Touchable onPress={() => setShowModal(true)}>
@@ -52,7 +59,7 @@ const AwayTemperatureComponent = ({ title, description }: ListItem): React.React
           visible={showModal}
           value={value}
           onValueChange={v => {
-            updateValue(v)
+            onChange(v)
             setShowModal(false)
           }}
           onClose={() => setShowModal(false)}
@@ -64,53 +71,15 @@ const AwayTemperatureComponent = ({ title, description }: ListItem): React.React
   )
 }
 
-const DefaultTargetComponent = ({ title, description }: ListItem): React.ReactElement => {
-  let [showModal, setShowModal] = useState(false)
-  let [value, setValue] = useState('')
-
-  useEffect(() => {
-    SettingsStore.get(DEFAULT_TARGET)
-      .then(v => setValue(v))
-  }, [])
-
-  let updateSetting = useCallback(async value => {
-    await SettingsStore.set(DEFAULT_TARGET, value)
-    setValue(value)
-  }, [])
-
-  console.log('AwayTemperatureComponent', value)
-
-  return (
-    <Touchable onPress={() => setShowModal(true)}>
-      <View style={[styles.item, h.justifyLeft, h.alignStart]}>
-        <View style={[v.justifyLeft, v.alignStart, flex]}>
-          <Text style={[text.default, text.primary]}>{title}</Text>
-          <Text style={[text.default, text.small]}>{description}</Text>
-        </View>
-        <Text style={[text.default, text.accent]}>{value}˚</Text>
-        <TemperatureSetModal
-          visible={showModal}
-          value={value}
-          onValueChange={v => {
-            updateSetting(v)
-            setShowModal(false)
-          }}
-          onClose={() => setShowModal(false)}
-        >
-          Select the default target temperature when creating new schedules
-        </TemperatureSetModal>
-      </View>
-    </Touchable>
-  )
-}
-
 interface ListItem {
   title: string,
-  description: string
+  description: string,
+  value: any,
+  preset: SettingParam
 }
 
 interface SettingItem extends ListItem{
-  component: (item: ListItem) => React.ReactElement
+  component: ({ item: ListItem, onChange: Function }) => React.ReactElement
 }
 
 const SETTINGS_STRUCTURE = [
@@ -118,13 +87,11 @@ const SETTINGS_STRUCTURE = [
   DEFAULT_TARGET
 ]
 
-function componentForSetting(setting: Setting): (item: ListItem) => React.ReactElement {
+function componentForSetting(setting: Setting): ({ item: ListItem, onChange: Function }) => React.ReactElement {
   switch (setting.id) {
     case AWAY_TEMPERATURE.id:
-      return AwayTemperatureComponent;
-
     case DEFAULT_TARGET.id:
-      return DefaultTargetComponent;
+      return TemperatureComponent;
 
     default:
       return SettingItem;
@@ -140,6 +107,8 @@ function buildSettingsList(settings: Setting[]): SettingItem[] {
       item = {
         title: setting.title,
         description: setting.description,
+        value: setting.value,
+        preset,
         component: componentForSetting(setting)
       }
     } else {
@@ -147,6 +116,8 @@ function buildSettingsList(settings: Setting[]): SettingItem[] {
       item = {
         title: preset.title,
         description: preset.description,
+        value: setting.value,
+        preset,
         component: componentForSetting(setting)
       }
 
@@ -162,6 +133,12 @@ function buildSettingsList(settings: Setting[]): SettingItem[] {
     component: (item) => <SettingItem {...item} />
   })
 
+  items.push({
+    title: "Reset Application",
+    description: "Clear all the data and restart the application",
+    component: (item) => <ResetAppItem {...item} />
+  })
+
   return items
 }
 
@@ -169,27 +146,21 @@ function buildSettingsList(settings: Setting[]): SettingItem[] {
 export const Settings = () => {
   let Screen = useDimensions('window')
 
-  let { loading, error, data, refresh } = useApi(listSettings)
-
-  if (error) {
-    console.error(error)
-  }
-
-  let [items, setItems] = useState<SettingItem[]>([])
-
-  useEffect(() => {
-    SettingsStore.all()
-      .then((settings) => buildSettingsList(settings))
-  }, [])
-  
-  
-  useEffect(() => {
-    if (data) {
-      setItems(buildSettingsList(data as Setting[]))
+  const Settings = useSettings({
+    onUpdate: Toast.showChangesOK,
+    onError: error => {
+      console.error(error)
+      
+      Toast.showError()
     }
-  }, [data])
+  })
+  const settings = Settings.all()
 
-  // TODO load settings from storage, and from API
+  const items = buildSettingsList(settings)
+
+  const updateSetting = useCallback((preset, value) => {
+    Settings.set(preset, value)
+  }, [Settings])
 
   return <View style={{ width: Screen.width, height: Screen.height, paddingTop: StatusBar.height }}>
     <SettingsBar />
@@ -198,7 +169,7 @@ export const Settings = () => {
       renderItem={({ item }) => {
         let C = item.component
 
-        return <C {...item} />
+        return <C item={item} onChange={value => updateSetting(item.preset, value)} />
       }}
       keyExtractor={item => item.title}
     />

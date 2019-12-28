@@ -1,9 +1,9 @@
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 
-import { Rule } from '../../api/models/rule'
+import { Rule } from '../../data/rules/model'
 
-import RuleListItem from './item'
+import RuleListItem from './Item'
 
 export default ({ rules, defaultTemperature, onStartEditing, onChange, onRemove }) => {
 
