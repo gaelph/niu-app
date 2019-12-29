@@ -1,14 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from'react-native';
 
-import dayjs from 'dayjs'
-import weekdays from 'dayjs/plugin/weekday'
-
 import { TemperatureRecord } from '../../data/temperature-records/model'
 
 import Colors from '../../theme/colors'
 
-dayjs.extend(weekdays)
 
 const temp = {
   integer(t: number): string {

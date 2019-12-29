@@ -4,7 +4,7 @@ import dayjs from 'dayjs'
 
 import { text, h, m } from '../../theme/styles'
 import Colors from '../../theme/colors'
-import { DayFromNumber } from '../../support/days'
+import { DayFromNumber, weekday } from '../../support/days'
 import Toast from '../../support/toast'
 
 import { useHold } from '../../data/hold/hooks'
@@ -34,7 +34,7 @@ function displayDatetime(datetime: dayjs.Dayjs, timezone: number): string {
   if (datetime.isSame(tomorrow, 'day')) {
     dayName = 'tomorrow'
   } else {
-    dayName = DayFromNumber[datetime.weekday()]
+    dayName = DayFromNumber[weekday(datetime)]
 
     if (datetime.diff(now, 'day') > 7) {
       dayName += ' ' + datetime.date()

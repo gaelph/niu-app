@@ -3,6 +3,7 @@ import dayjsPluginUtc from 'dayjs-plugin-utc'
 
 import { Rule, Schedule } from './model'
 import Time from '../../support/time'
+import { weekday } from '../../support/days'
 
 dayjs.extend(dayjsPluginUtc)
 
@@ -10,9 +11,7 @@ function sepearateRepeatAndNonRepeat(rules: Rule[], datetime: dayjs.Dayjs): [Rul
   let repeat: Rule[] = []
   let nonRepeat: Rule[] = []
 
-  let weekday = datetime.weekday() - 1;
-  weekday < 0 && (weekday = 6)
-  console.log('rules active on', datetime, weekday)
+  let day = weekday(datetime)
 
   rules
   .filter(rule => rule.active)
@@ -20,7 +19,7 @@ function sepearateRepeatAndNonRepeat(rules: Rule[], datetime: dayjs.Dayjs): [Rul
     // if (!rule.active) return
 
     if (rule.repeat) {
-      if (rule.days[weekday])
+      if (rule.days[day])
         repeat.push(rule)
     }
     else {
@@ -142,7 +141,7 @@ export function currentDeviceState(rules: Rule[], timezoneOffset: number): Curre
     let datetime = nextSevenDays[d];
 
     if (d > 0) {
-      datetime = datetime.set('hour', 0).set('minute', 0).set('second', 0)
+      datetime = datetime.set('hour', 0).set('minute', 0).set('second', 0).utcOffset(timezoneOffset / 60)
     }
     
     let [repeat, nonRepeat] = sepearateRepeatAndNonRepeat(rules, datetime);

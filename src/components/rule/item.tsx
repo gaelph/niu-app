@@ -2,11 +2,9 @@ import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { View, Text, TextInput, CheckBox, Switch, StyleSheet, TouchableNativeFeedback as Touchable, Animated, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import dayjs from 'dayjs'
-import weekdays from 'dayjs/plugin/weekday'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import utc from 'dayjs/plugin/utc'
 
-dayjs.extend(weekdays)
 dayjs.extend(relativeTime)
 dayjs.extend(utc)
 
@@ -19,6 +17,7 @@ import Colors from '../../theme/colors'
 import { Rule, Schedule } from '../../data/rules/model'
 import { Day, DayShortNames, sortDays } from '../../support/days'
 import Time from '../../support/time'
+import { weekday } from '../../support/days'
 
 import TimeBar from './TimeBar'
 import TemperatureSetter from '../shared/TemperatureSetModal'
@@ -80,7 +79,8 @@ export function Header({ name, active, days, nextDates, editing, inputRef, onNam
         return 'Tomorrow'
       }
       else {
-        return DayShortNames[(day.weekday() - 1).toString()]
+  
+        return DayShortNames[(weekday(day)).toString()]
       }
     })
     .join(', ')

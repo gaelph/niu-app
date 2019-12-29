@@ -1,3 +1,18 @@
+import dayjs from 'dayjs'
+import weekdays from 'dayjs/plugin/weekday'
+
+dayjs.extend(weekdays)
+
+export function weekday(datetime: dayjs.Dayjs | Date) {
+  if (datetime instanceof Date)
+    datetime = dayjs(datetime)
+
+  let weekday = datetime.weekday() - 1
+  weekday < 0 && (weekday = 6)
+
+  return weekday
+}
+
 export enum Day {
   Mon,
   Tue,
