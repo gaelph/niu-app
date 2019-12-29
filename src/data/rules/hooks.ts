@@ -31,7 +31,7 @@ export function useRules(options?: RulesOptions): RuleHook {
       const { listRules: rules } = cache.readQuery({
         query: queries.fetchRules
       })
-      console.log('writeQuery')
+      
       cache.writeQuery({
         query: queries.fetchRules,
         data: {

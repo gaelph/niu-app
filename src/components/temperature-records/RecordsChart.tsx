@@ -14,20 +14,30 @@ import { useDimensions } from '../../support'
 
 
 
-const Gradient = () => (
+const Gradient = ({ id, color }: { id: string, color: string }) => (
   <Defs>
-      <LinearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="110">
-        <Stop offset={'0%'} stopColor={Colors.foreground} stopOpacity={0.6}/>
-        <Stop offset={'100%'} stopColor={Colors.foreground} stopOpacity={0.1}/>
+      <LinearGradient id={id} x1="0%" y1="0%" x2="0%" y2="110">
+        <Stop offset={'0%'} stopColor={color} stopOpacity={0.6}/>
+        <Stop offset={'1%'} stopColor={color} stopOpacity={0.1}/>
       </LinearGradient>
     </Defs>
 )
 
-const Line = ({ line }: { line?: any}) => (
+const RevertGradient = ({ id, color }: { id: string, color: string }) => (
+  <Defs>
+      <LinearGradient id={id} x1="0%" y1="0%" x2="0%" y2="110">
+        <Stop offset={'0%'} stopColor={color} stopOpacity={0}/>
+        <Stop offset={'1%'} stopColor={color} stopOpacity={0.8}/>
+      </LinearGradient>
+    </Defs>
+)
+
+
+const Line = ({ line, color }: { line?: any, color: string }) => (
   <Path
       key={'line'}
       d={line}
-      stroke={Colors.text.primary}
+      stroke={color}
       strokeWidth={2}
       fill={'none'}
   />
@@ -133,10 +143,9 @@ export default function RecordsChart({ records, boilerStatusHistory }: RecordsCh
   const { width } = useDimensions('window')
   const chartWidth = width - 2 * Dimensions.padding
 
-  let ranges = makeStatusRanges(boilerStatusHistory)
-  ranges = putRecordsInRanges(records, ranges)
-
-  console.log('found', ranges.length, 'ranges')
+  let ranges = useMemo(() => {
+    return putRecordsInRanges(records,  makeStatusRanges(boilerStatusHistory))
+  }, [records, boilerStatusHistory])
 
   const [values, dates, Ybound, Xbound] = useMemo(() => {
     if (records.length === 0) return [[], [], { max: 25, min: 0 }, { max: 0, min: 0 }]
@@ -185,28 +194,30 @@ export default function RecordsChart({ records, boilerStatusHistory }: RecordsCh
           contentInset={{ top: 20, bottom: 0 }}
         >
           <Grid belowChart={false} svg={{ strokeOpacity: 0.15 }} />
-          <Line />
-          <Gradient />
+          <Line color={Colors.text.primary } />
+          <Gradient id="grad1" color={Colors.text.primary }/>
         </AreaChart> 
         { ranges
           .filter(r => r.value && r.records.length > 0)
           .map(range => (
-          <LineChart
+          <AreaChart
             key={`${range.from}-${range.to}`}
             style={{ height: 110, width: chartWidth, position: 'absolute' }}
             data={[
               +range.from,
               +range.to
             ]}
-            yAccessor={_ => Ybound.min}
+            yAccessor={_ => ((Ybound.max - Ybound.min) * 2 / 3) + Ybound.min}
             xAccessor={({ item }) => item}
             curve={ shape.curveLinear }
-            svg={{ stroke: 'orange', strokeWidth: 4 }}
+            svg={{ strokeWidth: 0, fill: 'url(#grad1)' }}
             yMin={Ybound.min}
             yMax={Ybound.max}
             xMin={Xbound.min}
             xMax={Xbound.max}>
-            </LineChart>
+              {/* <Line color={Colors.text.primary } /> */}
+              <RevertGradient id="grad1" color={Colors.accent }/>
+            </AreaChart>
           ))
         }
         </View>

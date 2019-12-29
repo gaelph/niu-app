@@ -67,11 +67,7 @@ function findSchedule(rules: Rule[], datetime: dayjs.Dayjs): CurrentState {
     return rule_schedule
   }))
 
-  console.log('found', schedules.length, 'schedules on', datetime)
-
   if (schedules.length === 0) return null
-
-  console.log('found', schedules[0])
 
   if (isCurrentSchedule(schedules[0].schedule, datetime)) {
     // A schedule is currently being applied
@@ -145,9 +141,6 @@ export function currentDeviceState(rules: Rule[], timezoneOffset: number): Curre
     }
     
     let [repeat, nonRepeat] = sepearateRepeatAndNonRepeat(rules, datetime);
-
-    console.log('repeat', repeat.map(r => r.name));
-    console.log('non-repeat', nonRepeat.map(r => r.name));
   
     if (nonRepeat.length > 0) {
       let schedule = findSchedule(nonRepeat, datetime)

@@ -59,8 +59,6 @@ export function useTemperatureRecords(): TemperatureRecordResult {
         updateQuery: (previous, { fetchMoreResult }) => {
           if (!fetchMoreResult) return previous
 
-          console.log(fetchMoreResult.temperatureRecordsSince.length, 'new records')
-
           const update = {
             ...previous,
             temperatureRecordsSince: [
