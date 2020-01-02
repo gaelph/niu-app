@@ -17,3 +17,5 @@ web-report/
 builds/**/*
 yarn-error.log
 apollo.config.js
+.graphqlconfig*
+schema.graphql

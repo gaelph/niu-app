@@ -15,8 +15,8 @@ import { Setting } from '../data/settings/model'
 
 import { useSettings, SettingParam, DEFAULT_TARGET, AWAY_TEMPERATURE } from '../data/settings/hooks'
 
-import SettingsBar from '../components/SettingsBar'
-import { TemperatureSetModal } from '../components/shared/TemperatureSetModal'
+import SettingsBar from '../containers/SettingsBar'
+import TemperatureModal from '../containers/temperature-records/TemperatureModal'
 
 const packageJson = require('../../package.json')
 
@@ -45,8 +45,10 @@ const ResetAppItem = ({ item: { title, description } }: { item: ListItem }): Rea
 }
 
 
-const TemperatureComponent = ({ item: { title, description, value }, onChange }: { item: ListItem, onChange: Function }): React.ReactElement => {
+const TemperatureComponent = ({ item: { title, description, preset, value }, onChange }: { item: ListItem, onChange: Function }): React.ReactElement => {
   let [showModal, setShowModal] = useState(false)
+
+  const sentence = description.charAt(0).toLocaleLowerCase() + description.substring(1)
 
   return (
     <Touchable onPress={() => setShowModal(true)}>
@@ -56,17 +58,16 @@ const TemperatureComponent = ({ item: { title, description, value }, onChange }:
           <Text style={[text.default, text.small]}>{description}</Text>
         </View>
         <Text style={[text.default, text.accent]}>{value}˚</Text>
-        <TemperatureSetModal
+        <TemperatureModal
           visible={showModal}
           value={value}
           onValueChange={v => {
             onChange(v)
-            setShowModal(false)
           }}
           onClose={() => setShowModal(false)}
         >
-          Select the target temperture when you are away from home
-        </TemperatureSetModal>
+          Select the {sentence}
+        </TemperatureModal>
       </View>
     </Touchable>
   )
@@ -180,6 +181,6 @@ export const Settings = () => {
 const styles = StyleSheet.create({
   item: {
     padding: Dimensions.padding,
-    paddingVertical: 8
+    paddingVertical: 16
   }
 })

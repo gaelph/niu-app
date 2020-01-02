@@ -5,6 +5,7 @@ import { TemperatureRecord } from '../../data/temperature-records/model'
 
 import Colors from '../../theme/colors'
 
+import BoilerStatus from '../../containers/boiler-status/BoilerStatus'
 
 const temp = {
   integer(t: number): string {
@@ -21,21 +22,16 @@ const temp = {
 
 type TemperatureViewProps = {
   record: TemperatureRecord
-  boilerStatus: boolean
 }
 
-export default function TemperatureView({ record, boilerStatus }: TemperatureViewProps): React.ReactElement {
+export default function TemperatureView({ record }: TemperatureViewProps): React.ReactElement {
   const value = record ? record.value : null
-
-  const indicatorStyle = boilerStatus
-      ? styles.statusIndicatorOn
-      : styles.statusIndicatorOff
 
   return (
     <View style={styles.content}>
       <View style={styles.tempView}>
         <View style={styles.indicatorContainer} >
-          <View style={[styles.statusIndicator, indicatorStyle]} collapsable={false}></View>
+          <BoilerStatus />
         </View>
         <Text style={[styles.text, styles.temp]}>{temp.integer(value)}</Text>
         <Text style={[styles.text, styles.tempUnit]}>˚</Text>

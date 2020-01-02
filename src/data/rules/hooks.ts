@@ -16,14 +16,20 @@ interface RulesOptions {
 
 interface RuleHook {
   loading: boolean
+  ready: boolean
   rules: Rule[]
   create: () => void
   update: (rule: Rule) => void
   remove: (rule: Rule) => void
 }
 
+const DEFAULT_RULES = []
+
 export function useRules(options?: RulesOptions): RuleHook {
-  const { loading, data } = useQuery(queries.fetchRules)
+  const { loading, data, networkStatus } = useQuery(queries.fetchRules, {
+    // fetchPolicy: "no-cache",
+    notifyOnNetworkStatusChange: true
+  })
   const [createRule, _createStatus] = useMutation(queries.createRule, {
     onCompleted: options && options.onMutationSuccess,
     onError: options && options.onMutationError,
@@ -43,7 +49,23 @@ export function useRules(options?: RulesOptions): RuleHook {
 
   const [updateRule, _updateStatus] = useMutation(queries.updateRule, {
     onCompleted: options && options.onMutationSuccess,
-    onError: options && options.onMutationError
+    onError: options && options.onMutationError,
+    update(cache, { data: { updateRule: rule } }) {
+      const { listRules: rules } = cache.readQuery({
+        query: queries.fetchRules
+      })
+      cache.writeQuery({
+        query: queries.fetchRules,
+        data: {
+          listRules: rules.map(r => {
+            if (rule.id === r.id) {
+              return rule
+            }
+            return r
+          })
+        }
+      })
+    }
   })
 
   const [removeRule, _removeStatus] = useMutation(queries.deleteRule, {
@@ -64,7 +86,7 @@ export function useRules(options?: RulesOptions): RuleHook {
 
   const rules = data
     ? data.listRules.map(rule => Rule.fromObject(rule))
-    : []
+    : DEFAULT_RULES
 
   const create = useCallback(() => {
     const rule = Rule.default()
@@ -81,46 +103,18 @@ export function useRules(options?: RulesOptions): RuleHook {
     removeRule({ variables: { rule: { id } }})
   }, [removeRule])
 
-  const rulesAreLoading = loading
-    || _createStatus.loading
-    || _updateStatus.loading
-    || _removeStatus.loading
+  const rulesAreLoading = 
+    loading || 
+    _createStatus.loading || 
+    _updateStatus.loading || 
+    _removeStatus.loading
 
   return {
     loading: rulesAreLoading,
-    rules,
+    rules: rules,
     create,
     update,
-    remove
+    remove,
+    ready: networkStatus == 7
   }
-}
-
-export function useCurrentSchedule(): CurrentState | {} {
-  const Settings = useSettings()
-  const { rules } = useRules()
-  const interval = useRef<number>()
-  const [currentSchedule, setCurrentSchedule] = useState<CurrentState>({})
-
-  let getSchedule = useCallback(async () => {
-    if (Settings && rules) {
-      const timezone = Settings.get(TIMEZONE_OFFSET)
-  
-      const schedule =  currentDeviceState(rules, timezone)
-      setCurrentSchedule(schedule)
-    }
-  }, [Settings, rules])
-
-  useEffect(() => {
-    getSchedule()
-  }, [Settings])
-
-  useEffect(() => {
-    if (interval.current) clearInterval(interval.current)
-
-    interval.current = setInterval(getSchedule, 60 * 1000) as unknown as number
-
-    return () => clearInterval(interval.current)
-  }, [])
-
-  return currentSchedule
 }

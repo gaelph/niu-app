@@ -1,15 +1,13 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React from 'react';
 import {
   View, Text, Modal,
-  DatePickerAndroid, TimePickerAndroid, 
-  DatePickerAndroidDateSetAction, TimePickerAndroidTimeSetAction,
   StyleSheet
 } from 'react-native'
 
 import dayjs from 'dayjs'
 
 import Button from '../buttons/Button'
-import TemperaturePicker from '../shared/TemperaturePicker'
+import TemperaturePicker from '../../containers/temperature-records/TemperaturePicker'
 
 import Colors from '../../theme/colors'
 import { flex, h, v, m, p, text } from '../../theme/styles'
@@ -36,50 +34,33 @@ function displayDatetime(datetime: dayjs.Dayjs): string {
 
 interface HoldModalProps {
   visible: boolean,
-  onValueChange: (change: { id: string, value: number, untilTime: dayjs.Dayjs }) => void,
-  onClose: () => void,
-  value: { id?: string, value: number, untilTime: dayjs.Dayjs },
+  value: number | string,
+  untilTime: dayjs.Dayjs,
+  ongoing: boolean
+  onTemperatureChange: (value: number) => void,
+  onSelectDefaultDateTime: () => void,
+  onSelectDateTime: () => Promise<void>
+  onResumeSchedule: () => void,
+  onCancel: () => void,
 }
 
-export function HoldModal({ visible, onValueChange, onClose, value }: HoldModalProps) {
-  let [high, setHigh] = useState<number>(value ? value.value : 15)
-  let [untilTime, setUntilTime] = useState<dayjs.Dayjs>(value ? value.untilTime : dayjs())
+export default function HoldModal(props: HoldModalProps) {
+  const {
+    visible,
+    value,
+    untilTime,
+    ongoing,
+    onTemperatureChange,
+    onSelectDefaultDateTime,
+    onSelectDateTime,
+    onResumeSchedule,
+    onCancel,
+  } = props
 
-  useEffect(() => {
-    //@ts-ignore
-    setHigh(parseInt(value.value, 10))
-    setUntilTime(value.untilTime)
-  }, [value])
-
-  const selectDateTime = useCallback(async () => {
-    let {action, year, month, day } = await DatePickerAndroid.open({
-      date: untilTime.toDate(),
-      minDate: dayjs().toDate()
-    }) as DatePickerAndroidDateSetAction
-
-    if (action === DatePickerAndroid.dateSetAction) {
-      let date = dayjs(`${year}-${month + 1}-${day}`)
-
-      let { action, hour, minute } = await TimePickerAndroid.open({
-        hour: untilTime.hour(),
-        minute: untilTime.minute(),
-        is24Hour: true
-      }) as TimePickerAndroidTimeSetAction
-
-      if (action === TimePickerAndroid.timeSetAction) {
-        let untilTime = dayjs(date).hour(hour).minute(minute)
-        
-        onValueChange({ id: value.id, value: high, untilTime })
-      }
-    }
-    setHigh(value.value)
-    setUntilTime(value.untilTime)
-  }, [high, untilTime])
-  
   return <Modal
     visible={visible}
-    onRequestClose={onClose}
-    onDismiss={onClose}
+    onRequestClose={onCancel}
+    onDismiss={onCancel}
     transparent={false}
     animationType='slide'
     hardwareAccelerated={true}
@@ -92,17 +73,19 @@ export function HoldModal({ visible, onValueChange, onClose, value }: HoldModalP
       </Text>
       <View style={[flex, h.alignMiddle]}>
         <View style={styles.inputContainer}>
-          <TemperaturePicker value={high.toString()} onValueChange={value => setHigh(value)} />
+          <TemperaturePicker value={value.toString()} onValueChange={onTemperatureChange} />
         </View>
       </View>
       <View style={[flex, v.justifyCenter, v.alignEnd]}>
-        <Button onPress={() => onValueChange({ id: value.id, value: high, untilTime })} style={p.v12} textStyle={[ text.default, text.primary, { fontSize: 22 }]}>Until {value.untilTime && displayDatetime(value.untilTime)}</Button>
-        <Button onPress={selectDateTime} style={p.v12} textStyle={[ text.default, text.primary, { fontSize: 22 }]}>Until a specific time</Button>
-        {
-          value.id &&
-          <Button onPress={() => onValueChange(null)} style={p.v12} textStyle={[ text.default, text.accent, { fontSize: 22 }]}>Resume schedule</Button>
+        { untilTime &&
+          <Button onPress={onSelectDefaultDateTime} style={p.v12} textStyle={[ text.default, text.primary, { fontSize: 22 }]}>Until {displayDatetime(untilTime)}</Button>
         }
-        <Button onPress={onClose} style={[p.t12, p.b0, m.t20]} textStyle={[ text.default, text.primary, { fontSize: 22 }]}>Cancel</Button>
+        <Button onPress={onSelectDateTime} style={p.v12} textStyle={[ text.default, text.primary, { fontSize: 22 }]}>Until a specific time</Button>
+        {
+          ongoing &&
+          <Button onPress={onResumeSchedule} style={p.v12} textStyle={[ text.default, text.accent, { fontSize: 22 }]}>Resume schedule</Button>
+        }
+        <Button onPress={onCancel} style={[p.t12, p.b0, m.t20]} textStyle={[ text.default, text.primary, { fontSize: 22 }]}>Cancel</Button>
       </View>
     </View>
   </Modal>

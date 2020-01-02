@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableNativeFeedback as Touchable} from 'react-native'
+import React from 'react'
+import { View, Text, StyleSheet } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import IconButton from '../buttons/IconButton'
@@ -8,36 +8,23 @@ import Colors from '../../theme/colors'
 
 interface TemperaturePickerProps {
   value: string,
-  onValueChange: (value: number) => void
+  onIncrement: () => void,
+  onDecrement: () => void
 }
 
-export default function TemperaturePicker({ value, onValueChange }: TemperaturePickerProps) {
-  const increment = useCallback(() => {
-    let v = parseInt(value, 10) + 1
-
-    if (v <= 30) {
-      onValueChange(v)
-    }
-  }, [onValueChange])
-
-  const decrement = useCallback(() => {
-    let v = parseInt(value, 10) - 1
-
-    if (v >= 5) {
-      onValueChange(v)
-    }
-  }, [onValueChange])
+export default function TemperaturePicker({ value, onIncrement, onDecrement }: TemperaturePickerProps) {
+  
 
   return (
     <View style={[h.center, h.alignMiddle]}>
-      <IconButton style={styles.round} name="minus" provider={Feather} onPress={decrement} size={18} color={Colors.grey} />
+      <IconButton style={styles.round} name="minus" provider={Feather} onPress={onDecrement} size={18} color={Colors.grey} />
 
 
       <Text style={[text.default, text.accent, {fontSize: 64, width: 98, textAlign: 'center' }]}>
         {value}˚
       </Text>
 
-      <IconButton style={styles.round} name="plus" provider={Feather} onPress={increment} size={18} color={Colors.grey} />
+      <IconButton style={styles.round} name="plus" provider={Feather} onPress={onIncrement} size={18} color={Colors.grey} />
 
     </View>
   )

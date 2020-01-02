@@ -20,7 +20,7 @@ import Time from '../../support/time'
 import { weekday } from '../../support/days'
 
 import TimeBar from './TimeBar'
-import TemperatureSetter from '../shared/TemperatureSetModal'
+import TemperatureSetButton from '../../containers/temperature-records/TemperatureSetButton'
 import ActionButton from './ActionButton'
 
 
@@ -41,21 +41,24 @@ export function FadeInOut({ duration, children }) {
 
 
 interface HeaderProps {
-  name: string
-  active: boolean,
-  days: {
-    [T in Day]: boolean
-  }
-  nextDates: Date[],
+  rule: Rule
   editing: boolean,
   inputRef: React.MutableRefObject<TextInput>,
   onStartEditing: (inputRef: React.MutableRefObject<TextInput>) => void,
-  onNameChange: (name: string) => void,
-  onActiveChange: (active: boolean) => void,
+  onNameChange: (rule: Rule, name: string) => void,
+  onActiveChange: (rule: Rule, active: boolean) => void,
 }
 
-export function Header({ name, active, days, nextDates, editing, inputRef, onNameChange, onActiveChange }: HeaderProps) {
-  let _inputRef = useRef<TextInput>()
+export function Header({ rule, editing, inputRef, onNameChange, onActiveChange }: HeaderProps) {
+  const { name, repeat, active, days, next_dates: nextDates } = rule
+
+  let actualActive = repeat
+    ? active
+    : active && !nextDates.every(d => {
+      let date = dayjs(d)
+      let today = dayjs()
+      return date.isBefore(today, 'day')
+    })
 
   const daysString = nextDates.length == 0 
   ? Object.keys(days)
@@ -94,34 +97,33 @@ export function Header({ name, active, days, nextDates, editing, inputRef, onNam
     <View style={[h.alignStart, p[8], p.b0, { flexDirection: 'row' }]}>
       <View collapsable={false} style={flex}>
         <View style={[h.alignMiddle, flex ]}>
-          <TextInput ref={inputRef} editable={editing} placeholder={"Preset"} onChangeText={onNameChange} style={[text.default, text.primary, text.italic, m.r4]} value={name}/>
+          <TextInput ref={inputRef} editable={editing} placeholder={"Preset"} onChangeText={name => onNameChange(rule, name)} style={[text.default, text.primary, text.italic, m.r4]} value={name}/>
           <IconButton name={editing ? "chevron-up": "chevron-down"} size={24} color={Colors.border} provider={Feather} />
         </View>
         {!editing &&
           <Text style={[text.default, text.primary, text.small, text.bold]}>{daysString}</Text>
         }
       </View>
-      <Switch value={active} onValueChange={onActiveChange} />
+      <Switch value={actualActive} onValueChange={(active) => onActiveChange(rule, active)} />
     </View>
   )
 }
 
 interface DaySelectorProps {
-  days: {
-    [T in Day]: boolean
-  },
-  ruleId: string,
-  onDayChange: (day: Day, value: boolean) => void,
+  rule: Rule
+  onDayChange: (rule: Rule, day: Day, value: boolean) => void,
 }
 
-export function DaySelector({ days, ruleId, onDayChange }: DaySelectorProps) {
+export function DaySelector({ rule, onDayChange }: DaySelectorProps) {
+  const { id: ruleId, days } = rule
+
   return (
     // <FadeInOut duration={400}>
       <View style={[flex, m.t8, h.justifyLeft, h.alignMiddle]}>
       {
         Object.keys(DayShortNames)
         .map((Day, idx) => (
-          <Touchable key={`${ruleId}_${Day.toString()}`} onPress={() => onDayChange(idx.toString() as unknown as Day, !days[idx])}>
+          <Touchable key={`${ruleId}_${Day.toString()}`} onPress={() => onDayChange(rule, idx.toString() as unknown as Day, !days[idx])}>
             <View style={[v.center, m.r4, dayStyles.dayCircle, { opacity: days[idx] ? 1 : 0.4 }]}>
               <Text style={[text.default, text.primary, text.bold, text.small]}>{DayShortNames[Day].charAt(0)}</Text>
             </View>
@@ -180,117 +182,45 @@ export function TimeSelector({ schedule, prop, onChange }: TimeSelectorProps) {
 }
 
 
-function nextDays(days: {[K in Day]: boolean}, date: Date): Date[] {
-  return Object.values(days)
-    .map((bool: boolean, i: number) => [i, bool])
-    .filter(([_, bool]: [number, boolean]) => bool)
-    .map(([day, _]: [number, boolean]) => {
-      return dayjs(date).weekday(day + 1).toDate()
-    })
-
+interface RuleListItemProps {
+  rule: Rule
+  defaultTemperature: number
+  onStartEditing: (inputRef: any) => void
+  onRemove: (rule: Rule) => void
+  onNameChange: (rule: Rule, name: string) => void
+  onActiveChange: (rule: Rule, active: boolean) => void
+  onRepeatChange: (rule: Rule, repeat: boolean) => void
+  onDaysChange: (rule: Rule, day: Day, value: boolean) => void
+  onAddSchedule: (rule: Rule) => void
+  onUpdateSchedule: (rule: Rule, idx: number, schedule: Schedule) => void
+  onRemoveSchedule: (rule: Rule, idx: number) => void
 }
 
-export default ({ rule, defaultTemperature, onStartEditing, onChange, onRemove }) => {
-  const [name, setName] = useState<string>(rule.name)
-  const [active, setActive] = useState<boolean>(rule.active)
-  const [repeat, setRepeat] = useState<boolean>(rule.repeat)
-  const [days, setDays] = useState(rule.days)
-  const [nextDates, setNextDates] = useState<Date[]>(rule.next_dates)
-  const [schedules, setSchedules] = useState(rule.schedules)
+export default (props: RuleListItemProps) => {
+  const {
+    rule,
+    defaultTemperature,
+    onStartEditing,
+    onRemove,
+    onNameChange,
+    onActiveChange,
+    onRepeatChange,
+    onDaysChange,
+    onAddSchedule,
+    onUpdateSchedule,
+    onRemoveSchedule
+  } = props
+
 
   const [width, setWidth] = useState<number>(0)
   const [editing, setEditing] = useState<boolean>(rule.name === null || rule.name === undefined)
 
   const inputRef = useRef<TextInput>()
 
-  const updateName = useCallback((name) => {
-    setName(name)
-    onChange({ id: rule.id, name })
-  }, [rule])
-
-  const updateActive = useCallback((active) => {
-    setActive(active)
-
-    let next_dates = []
-    if (active && !rule.repeat) {
-      next_dates = nextDays(rule.days, new Date())
-    }
-    setNextDates(next_dates)
-
-    onChange({ id: rule.id, active, next_dates })
-  }, [rule])
-
-  const updateRepeat = useCallback((repeat) => {
-    setRepeat(repeat)
-
-    let next_dates = []
-    if (!repeat) {
-      next_dates = nextDays(rule.days, new Date())
-    }
-
-    setNextDates(next_dates)
-
-    onChange({ id: rule.id, repeat, next_dates })
-  }, [rule])
-
-  const updateDays = useCallback((day, value) => {
-    let update = { ...days, [day]: value }
-
-    let next_dates = []
-    if (!rule.repeat) {
-      next_dates = nextDays(update, new Date())
-    }
-
-    setDays(update)
-    setNextDates(next_dates)
-    onChange({ id: rule.id, days: update, next_dates })
-  }, [rule])
-
-  const updateSchedules = useCallback((schedules) => {
-    setSchedules(schedules)
-    onChange({ id: rule.id, schedules })
-  }, [rule])
-
-  const addSchedule = useCallback(async () => {
-    let schedule = Schedule.default()
-    schedule.high = defaultTemperature
-
-    schedule = await openTimePicker(schedule, 'from')
-
-    if (schedule) {
-      schedule = await openTimePicker(schedule, 'to')
-
-      if (schedule) {
-        updateSchedules([...schedules, schedule])
-      }
-    }
-
-  }, [schedules])
-
-  const updateSchedule = useCallback((idx, schedule) => {
-    let updated = schedules.map((s, i) => {
-      if (i === idx)
-        return schedule
-
-      return s
-    })
-
-    updateSchedules(updated)
-  }, [schedules])
-
-  const removeSchedule = useCallback((idx: number) => {
-    let updates = schedules.filter((_, i: number) => i !== idx)
-
-    updateSchedules(updates)
-  }, [schedules])
-
-  let actualActive = repeat
-    ? active
-    : active && !nextDates.every(d => {
-      let date = dayjs(d)
-      let today = dayjs()
-      return date.isBefore(today, 'day')
-    })
+  const {
+    repeat,
+    schedules,
+  } = rule
 
   return (
     <View style={[m.b16, styles.item]} onLayout={({ nativeEvent: { layout: { width } } }) => setWidth(width - 2)}>
@@ -302,17 +232,17 @@ export default ({ rule, defaultTemperature, onStartEditing, onChange, onRemove }
       }}>
         <View collapsable={false}>
           {/* Header of the rule view */}
-          <Header name={name} active={actualActive} days={days} nextDates={nextDates} editing={editing} inputRef={inputRef}
+          <Header rule={rule} editing={editing} inputRef={inputRef}
             onStartEditing={onStartEditing}
-            onNameChange={updateName}
-            onActiveChange={updateActive}
+            onNameChange={onNameChange}
+            onActiveChange={onActiveChange}
           />
           
           {/* Row with day selection and repeatable */}
           {editing &&
             <View style={[p.h8, p.b4, h.justifyLeft]}>
-              <DaySelector ruleId={rule.id} days={days} onDayChange={updateDays} />
-              <RepeatCheckBox repeat={repeat} onChange={updateRepeat} />
+              <DaySelector rule={rule} onDayChange={onDaysChange} />
+              <RepeatCheckBox repeat={repeat} onChange={repeat => onRepeatChange(rule, repeat)} />
             </View>
           }
 
@@ -327,23 +257,23 @@ export default ({ rule, defaultTemperature, onStartEditing, onChange, onRemove }
                 schedules.map((schedule: Schedule, idx: number) => (
                   <View key={`${rule.id}_${schedule.from}_${schedule.to}`} style={{ flexDirection: 'row', alignItems:'center', paddingVertical: 8 }}>
                     <View style={[flex, h.alignMiddle]}>
-                      <TimeSelector schedule={schedule} prop="from" onChange={(s) => updateSchedule(idx, s)} />
+                      <TimeSelector schedule={schedule} prop="from" onChange={(s) => onUpdateSchedule(rule, idx, s)} />
 
                       <Text style={[text.default, text.large, text.light]}>-</Text>
 
-                      <TimeSelector schedule={schedule} prop="to" onChange={(s) => updateSchedule(idx, s)} />
+                      <TimeSelector schedule={schedule} prop="to" onChange={(s) => onUpdateSchedule(rule, idx, s)} />
                     </View>
 
                     {/* schedule temperature override */}
-                    <TemperatureSetter
+                    <TemperatureSetButton
                       value={schedule.high} 
                       defaultValue={defaultTemperature}
                       message="Select the temperture settings you would like to use for these hours"
-                      onChange={value => updateSchedule(idx, {...schedule, high: value })}
+                      onChange={(value: string) => onUpdateSchedule(rule, idx, {...schedule, high: parseInt(value, 10) })}
                       />
 
                     {/* Delete Schedule Button */}
-                    <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => removeSchedule(idx)} />
+                    <IconButton name="x" size={16} color="gray" provider={Feather} onPress={() => onRemoveSchedule(rule, idx)} />
                   </View>
                 ))
               }
@@ -352,7 +282,7 @@ export default ({ rule, defaultTemperature, onStartEditing, onChange, onRemove }
             {/* Action buttons */}
             <View style={[h.justifyLeft, p.h8, {borderTopWidth: 1, borderTopColor: Colors.fineBorder, borderStyle: 'solid'}]}>
               {/* Add a schedule to the rule */}
-              <ActionButton onPress={addSchedule} icon="plus" Provider={Feather} iconPosition="start" title="Add hours" align="start" />
+              <ActionButton onPress={() => onAddSchedule(rule)} icon="plus" Provider={Feather} iconPosition="start" title="Add hours" align="start" />
               {/* Delete the rule */}
               <ActionButton onPress={() => onRemove(rule)} icon="trash-2" Provider={Feather} iconPosition="start" title="Remove" align="end" />
             </View>

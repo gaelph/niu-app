@@ -1,32 +1,32 @@
-import React, { useCallback, useRef, useEffect } from 'react';
+// External imports
+import React, { useCallback, useRef } from 'react'
 import {
   StyleSheet,
   View,
   ScrollView,
   KeyboardAvoidingView,
   RefreshControl
-} from 'react-native';
-import { Dimensions as Dim } from 'react-native'
+} from 'react-native'
 
+// Styles and dimensions
 import Colors from '../theme/colors'
 import Dimensions from '../theme/dimensions'
 import { StatusBar, useDimensions } from '../support/dimensions'
-import Toast from '../support/toast'
 
-import AppBar from '../components/AppBar'
-import TemperatureView from '../components/temperature-records/TempertureView'
-import RecordsChart from '../components/temperature-records/RecordsChart'
-import PlusButton from '../components/rule/PlusButton'
-import RuleList from '../components/rule/List'
-
+// Data layer
 import { useTemperatureRecords } from '../data/temperature-records/hooks'
 import { useBoilerStatus, useBoilerStatusHistory } from '../data/boiler-status/hooks'
-import { useSettings, DEFAULT_TARGET } from '../data/settings/hooks'
+import { useSettings } from '../data/settings/hooks'
 import { useRules } from '../data/rules/hooks'
 
-import { HoldButton } from '../components/hold/HoldButton'
+// Container views
+import AppBar from '../containers/AppBar'
+import HoldButton from '../containers/hold/HoldButton'
+import RuleList from '../containers/rules/RulesList'
+import AddRuleButton from '../containers/rules/AddRuleButton'
+import Temperature from '../containers/temperature-records/Temperature'
+import TemperatureChart from '../containers/temperature-records/TemperatureChart'
 
-const Screen = Dim.get('window')
 
 export function Home() {
   let Screen = useDimensions('window')
@@ -37,15 +37,7 @@ export function Home() {
   const BoilerStatusHistory = useBoilerStatusHistory()
   const Settings = useSettings()
 
-  const Rules = useRules({
-    onMutationSuccess: Toast.showChangesOK,
-    onMutationError: (error) => {
-      console.error(error)
-      console.log(error.graphQLErrors)
-
-      Toast.showError()
-    }
-  })
+  const Rules = useRules()
 
   const refresh = useCallback(() => {
     Records.fetchMore()
@@ -59,16 +51,15 @@ export function Home() {
     || BoilerStatus.loading
     || BoilerStatusHistory.loading
 
-  let defaultTarget = Settings.get(DEFAULT_TARGET)
 
   const scrollToRef = useCallback(inputRef => {
-    inputRef.current.measure((x, y, _w, _h, _px, py) => {
+    inputRef.current.measure((x: number, _y: number, _w: number, _h: number, _px: number, py: number) => {
       scrollview.current.scrollTo({ x, y: py - StatusBar.height, animated: true })
     })
   }, [scrollview])
 
-  return (!Settings.loading && 
-    <KeyboardAvoidingView behavior="height" style={{ width: Screen.width, height: Screen.height }}>
+  return (
+    <KeyboardAvoidingView style={{ width: Screen.width, height: Screen.height }}>
       <ScrollView
         ref={scrollview}
         style={[styles.container, { width: Screen.width, height: Screen.height }]}
@@ -76,13 +67,13 @@ export function Home() {
         refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={appLoading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + StatusBar.height} />}>
         <View style={styles.view}>
           <AppBar />
-          <TemperatureView record={Records.latest()} boilerStatus={BoilerStatus.status} />
+          <Temperature />
           <HoldButton />
-          <RecordsChart records={Records.records} boilerStatusHistory={BoilerStatusHistory.statuses} />
-          <RuleList rules={Rules.rules} onStartEditing={scrollToRef} onChange={Rules.update} onRemove={Rules.remove} defaultTemperature={defaultTarget} />
+          <TemperatureChart />
+          <RuleList onStartEditing={scrollToRef} />
         </View>
       </ScrollView>
-      <PlusButton onPress={Rules.create}/>
+      <AddRuleButton />
     </KeyboardAvoidingView>
   );
 }
@@ -94,7 +85,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: null,
-    width: Screen.width,
+    width: '100%',
     alignItems: 'center',
     paddingTop: StatusBar.height,
     paddingBottom: Dimensions.appBar.height + StatusBar.height,

@@ -1,5 +1,6 @@
 import React from 'react';
 import ErrorRecovery from 'expo-error-recovery';
+// import { setNativeExceptionHandler } from "react-native-exception-handler";
 
 import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
 
@@ -17,7 +18,7 @@ import { ApolloProvider } from '@apollo/react-hooks';
 
 // Error handling
 ErrorUtils.setGlobalHandler((error) => {
-  ErrorRecovery.setRecoveryProps({ error })
+  // ErrorRecovery.setRecoveryProps({ error })
 
   console.error(error)
 
@@ -29,6 +30,10 @@ ErrorUtils.setGlobalHandler((error) => {
     ]
   )
 })
+
+// setNativeExceptionHandler((error) => {
+//   console.warn(error)
+// })
 
 const AppNavigator = createStackNavigator({
   Home: {

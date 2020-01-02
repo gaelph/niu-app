@@ -28,6 +28,8 @@ interface TemperatureRecordResult {
   fetchMore: () => void
 }
 
+const DEFAULT_RECORDS = []
+
 /**
  * Hook to provide temperature records to a view
  */
@@ -71,7 +73,7 @@ export function useTemperatureRecords(): TemperatureRecordResult {
         }
       })
     } catch (error) {
-      console.warn(error)
+      // ignore console.warn(error)
     }
   }, [since, data, fetchMore])
 
@@ -88,7 +90,7 @@ export function useTemperatureRecords(): TemperatureRecordResult {
   const recordInstances = useMemo(() => {
     return data
       ? data.temperatureRecordsSince.map(record => new TemperatureRecord(record))
-      : []
+      : DEFAULT_RECORDS
   }, [data])
 
   const latest = useCallback((): TemperatureRecord | null => {

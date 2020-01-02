@@ -52,6 +52,8 @@ interface SettingsOptions {
   onError?: (error: Error) => void
 }
 
+const DEFAULT_SETTINGS = []
+
 export function useSettings(options?: SettingsOptions): SettingsResult | null {
   const { loading, data } = useQuery(queries.fetchSettings)
   const [updateSetting, _] = useMutation(queries.updateSetting, {
@@ -62,7 +64,7 @@ export function useSettings(options?: SettingsOptions): SettingsResult | null {
   let settings = useMemo(() => {
     return data
       ? data.listSettings.map(setting => Setting.fromObject(setting))
-      : []
+      : DEFAULT_SETTINGS
   }, [data])
 
   let Settings = useMemo(() => {
@@ -101,5 +103,5 @@ export function useSettings(options?: SettingsOptions): SettingsResult | null {
 
   return data
     ? Settings
-    : { loading, get: () => null, set: () => null, all: () => [] }
+    : { loading, get: () => null, set: () => null, all: () => DEFAULT_SETTINGS }
 }

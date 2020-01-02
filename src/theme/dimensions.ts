@@ -1,7 +1,7 @@
 
 export default {
   appBar: {
-    height: 54,
+    height: 64,
   },
   padding: 30
 }

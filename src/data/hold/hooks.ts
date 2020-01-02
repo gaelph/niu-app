@@ -55,12 +55,12 @@ export function useHold({ onMutationSuccess, onMutationError }): HoldResult | nu
       create({ variables: { hold } })
     }
     // Query return a hold, and called with one ? update it
-    else if (hold != null && data.getHold) {
+    else if (hold != null && data && data.getHold) {
       hold.untilTime = hold.untilTime.utc()
       update({ variables: { hold } })
     }
     // Query returned a hold, but called with none ? delete it
-    else if (hold == null && data.getHold) {
+    else if (hold == null && data && data.getHold) {
       remove({ variables: { id: data.getHold.id } })
     }
   }, [data, update, remove])

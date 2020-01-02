@@ -1,11 +1,11 @@
 import dayjs from 'dayjs'
-import dayjsPluginUtc from 'dayjs-plugin-utc'
+// import dayjsPluginUtc from 'dayjs-plugin-utc'
 
 import { Rule, Schedule } from './model'
 import Time from '../../support/time'
 import { weekday } from '../../support/days'
 
-dayjs.extend(dayjsPluginUtc)
+// dayjs.extend(dayjsPluginUtc)
 
 function sepearateRepeatAndNonRepeat(rules: Rule[], datetime: dayjs.Dayjs): [Rule[], Rule[]] {
   let repeat: Rule[] = []

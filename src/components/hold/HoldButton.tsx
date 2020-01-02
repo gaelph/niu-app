@@ -1,19 +1,12 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, TouchableNativeFeedback as Touchable, StyleSheet } from 'react-native'
 import dayjs from 'dayjs'
 
-import { text, h, m } from '../../theme/styles'
+import { text } from '../../theme/styles'
 import Colors from '../../theme/colors'
 import { DayFromNumber, weekday } from '../../support/days'
-import Toast from '../../support/toast'
-
-import { useHold } from '../../data/hold/hooks'
-import { useRules } from '../../data/rules/hooks'
-import { currentDeviceState } from '../../data/rules/device-state'
 import { CurrentState } from '../../data/rules/device-state'
-import { useSettings, AWAY_TEMPERATURE, TIMEZONE_OFFSET } from '../../data/settings/hooks'
-
-import { HoldModal } from './HoldModal'
+import { Hold } from '../../data/hold/model'
 
 function displayDatetime(datetime: dayjs.Dayjs, timezone: number): string {
 
@@ -44,7 +37,7 @@ function displayDatetime(datetime: dayjs.Dayjs, timezone: number): string {
 }
 
 function displayDeviceState({ current, nextChange }: CurrentState, defaultTemperature: number = 15, timezone: number): string {
-  if (!current && !nextChange) return `${defaultTemperature}˚`
+  if (!current && !nextChange) return `${defaultTemperature || '...'}˚`
 
   if (!current) {
     return `${defaultTemperature}˚ until ${displayDatetime(nextChange, timezone)}`
@@ -53,29 +46,15 @@ function displayDeviceState({ current, nextChange }: CurrentState, defaultTemper
   return `${current.schedule.high}˚ until ${displayDatetime(nextChange, timezone)}`
 }
 
+interface HoldButtonProps {
+  currentSchedule: CurrentState
+  hold: Hold
+  awayTemperature: number
+  timezone: number
+  onPress: () => void
+}
 
-export function HoldButton () {
-  const [showModal, setShowModal] = useState<boolean>(false)
-  const { hold, updateHold } = useHold({
-    onMutationSuccess: () => {
-      Toast.showChangesOK()
-      setShowModal(false)
-    },
-    onMutationError: (error: Error) => {
-      console.error(error)
-      Toast.showError()
-    }
-  })
-
-  const { rules } = useRules()
-  const Settings = useSettings()
-  const awayTemperature = Settings.get(AWAY_TEMPERATURE)
-  const timezone = Settings.get(TIMEZONE_OFFSET)
-
-  const currentSchedule = useMemo(() => {
-    return currentDeviceState(rules, timezone)
-  }, [awayTemperature, timezone, rules])
-
+export function HoldButton ({ currentSchedule, hold, awayTemperature, timezone, onPress }: HoldButtonProps) {
   const holdActive = useMemo(() => {
     return hold
       ? hold.isActive()
@@ -83,27 +62,20 @@ export function HoldButton () {
   }, [hold])
 
   const holdText = useMemo(() => {
-
     return holdActive
       ? `Holding ${hold.value}˚ until ${displayDatetime(hold.untilTime, timezone)}`
       : displayDeviceState(currentSchedule, awayTemperature, timezone)
   }, [hold, holdActive, currentSchedule, awayTemperature])
 
-  const onValueChange = useCallback((hold) => {
-    updateHold(hold)
-  }, [updateHold, setShowModal])
 
-  return (Settings &&
-  <View style={[h.justifyCenter, h.alignMiddle, m.t24]}>
-    <Touchable onPress={() => setShowModal(true)}>
+  return (
+    <Touchable onPress={onPress}>
       <View style={styles.schedule}>
         <Text style={[text.default, text.primary, text.semiBold, styles.timeText]}>
           { holdText }
         </Text>
       </View>
     </Touchable>
-    <HoldModal visible={showModal} onClose={() => setShowModal(false)} value={hold} onValueChange={onValueChange} />
-  </View>
   )
 }
 
