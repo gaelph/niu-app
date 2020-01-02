@@ -18,3 +18,9 @@ mutation UpdateSetting($setting: UpdateSettingInput) {
   }
 }
 `
+
+export const resetApp = gql`
+mutation ResetApp {
+  resetApp @client
+}
+`
