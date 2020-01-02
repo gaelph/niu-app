@@ -9,8 +9,8 @@ query FetchBoilerStatus {
 }`
 
 export const fetchBoilerStatusHistory = gql`
-query FetchBoilerStatusHistory {
-  getAllEventsType(type: BOILER_STATUS) {
+query FetchBoilerStatusHistory($after: Date) {
+  getAllEventsType(type: BOILER_STATUS, after: $after) {
     id
     value
     createdOn

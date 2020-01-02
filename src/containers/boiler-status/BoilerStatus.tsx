@@ -5,7 +5,7 @@ import { useBoilerStatus } from '../../data/boiler-status/hooks'
 import BoilerStatus from '../../components/BoilerStatus'
 
 export default () => {
-  const { status } = useBoilerStatus()
+  const { latest } = useBoilerStatus()
 
-  return <BoilerStatus status={status} />
+  return <BoilerStatus status={latest.value} />
 }

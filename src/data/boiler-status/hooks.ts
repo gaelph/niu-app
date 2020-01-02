@@ -1,47 +1,111 @@
-import { useQuery } from '@apollo/react-hooks'
+import { useMemo, useCallback, useEffect, useRef } from 'react'
+import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks'
 
 import * as queries from "./queries"
 
 import { BoilerStatus } from './model'
 
+/**
+ * Hook to locally keep the date of the most recent temperature record
+ * This is to avoid refetching all 300 latest temperature records every minute
+ */
+const useSince = () => {
+  const defaultSince = (new Date(0)).toISOString()
+  const { data } = useQuery(queries.getSince)
+
+  const [setSince, _] = useMutation(queries.setSince)
+
+  const updateSince = useCallback((v) => {
+    setSince({ variables: { since: v }})
+  }, [])
+
+  return [data ? data.boilerStatusSince: defaultSince, updateSince]
+}
+
+
 interface BoilerStatusHook {
   loading: boolean
-  status: boolean
-  refresh: () => void
-}
-
-export function useBoilerStatus(): BoilerStatusHook {
-  const { loading, data, refetch } = useQuery(queries.fetchBoilerStatus, {
-    pollInterval: 60000
-  })
-
-  return {
-    loading,
-    status: data
-      ? data.getLatestEventType.value === 'true'
-      : false,
-    refresh: refetch
-  }
-}
-
-interface BoilerStatusHookHistory {
-  loading: boolean
   statuses: BoilerStatus[]
-  refresh: () => void
+  latest: BoilerStatus
+  fetchMore: () => void
 }
 
 const DEFAULT_HISTORY = []
 
-export function useBoilerStatusHistory(): BoilerStatusHookHistory {
-  const { loading, data, refetch } = useQuery(queries.fetchBoilerStatusHistory, {
-    pollInterval: 60000
-  })
+export function useBoilerStatus(): BoilerStatusHook {
+  const client = useApolloClient()
+  client.addResolvers(queries.resolvers)
+
+  const { loading, data, fetchMore } = useQuery(queries.fetchBoilerStatusHistory)
+
+  const interval = useRef<number>()
+  const [since, setSince] = useSince()
+
+  // When statuses change, update the since value
+  useEffect(() => {
+    if (data) {
+      try {
+        let newSince = data.getAllEventsType[0].createdOn
+        setSince(newSince)
+      } catch {
+        // ignore
+      }
+    }
+  }, [data])
+
+  const fetchLatest = useCallback(() => {
+    try {
+      fetchMore({
+        variables: { after: since },
+        updateQuery: (previous, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return previous
+
+          const update = {
+            ...previous,
+            getAllEventsType: [
+              ...fetchMoreResult.getAllEventsType,
+              ...previous.getAllEventsType
+            ]
+          }
+
+          return update
+        }
+      })
+    } catch (error) {
+      // ignore console.warn(error)
+    }
+  }, [since, data, fetchMore])
+
+  // Poll every now and then for boiler status update
+  useEffect(() => {
+    if (interval.current) clearInterval(interval.current)
+    interval.current = setInterval(fetchLatest, 60000) as unknown as number
+
+    () => {
+      clearInterval(interval.current)
+    }
+  }, [since, fetchLatest])
+
+  const history = useMemo(() => {
+    if (data) {
+      return data.getAllEventsType.map(BoilerStatus.from)
+    }
+     
+    return DEFAULT_HISTORY
+  }, [data])
+
+  const latest = useMemo(() => {
+    if (history.length > 0) {
+      return history[0]
+    }
+
+    return null
+  }, [history])
 
   return {
     loading,
-    statuses: data
-      ? data.getAllEventsType.map(BoilerStatus.from)
-      : DEFAULT_HISTORY,
-    refresh: refetch
+    statuses: history,
+    fetchMore: fetchLatest,
+    latest: latest
   }
 }

@@ -4,7 +4,7 @@ import { TemperatureRecord } from '../../data/temperature-records/model'
 import { BoilerStatus } from '../../data/boiler-status/model'
 
 import { useTemperatureRecords } from '../../data/temperature-records/hooks'
-import { useBoilerStatusHistory } from '../../data/boiler-status/hooks'
+import { useBoilerStatus } from '../../data/boiler-status/hooks'
 
 import { useDimensions } from '../../support'
 
@@ -89,7 +89,7 @@ const DEFAULT_RECORDS = []
 
 export default () => {
   const Records = useTemperatureRecords()
-  const { statuses } = useBoilerStatusHistory()
+  const { statuses } = useBoilerStatus()
 
   const { width } = useDimensions('window')
 

@@ -23,7 +23,7 @@ const useSince = () => {
 interface TemperatureRecordResult {
   loading: boolean
   records: TemperatureRecord[]
-  latest: () => TemperatureRecord | null
+  latest: TemperatureRecord | null
   error: ApolloError
   fetchMore: () => void
 }
@@ -93,7 +93,7 @@ export function useTemperatureRecords(): TemperatureRecordResult {
       : DEFAULT_RECORDS
   }, [data])
 
-  const latest = useCallback((): TemperatureRecord | null => {
+  const latest = useMemo((): TemperatureRecord | null => {
     if (recordInstances.length > 0) {
       return recordInstances[0]
     }

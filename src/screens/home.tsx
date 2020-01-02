@@ -15,7 +15,7 @@ import { StatusBar, useDimensions } from '../support/dimensions'
 
 // Data layer
 import { useTemperatureRecords } from '../data/temperature-records/hooks'
-import { useBoilerStatus, useBoilerStatusHistory } from '../data/boiler-status/hooks'
+import { useBoilerStatus } from '../data/boiler-status/hooks'
 import { useSettings } from '../data/settings/hooks'
 import { useRules } from '../data/rules/hooks'
 
@@ -34,22 +34,20 @@ export function Home() {
 
   const Records = useTemperatureRecords()
   const BoilerStatus = useBoilerStatus()
-  const BoilerStatusHistory = useBoilerStatusHistory()
   const Settings = useSettings()
 
   const Rules = useRules()
 
   const refresh = useCallback(() => {
     Records.fetchMore()
-    BoilerStatus.refresh()
-    BoilerStatusHistory.refresh()
-  }, [Records, BoilerStatus, BoilerStatusHistory])
+    BoilerStatus.fetchMore()
+  }, [Records, BoilerStatus, BoilerStatus])
 
   const appLoading = Records.loading 
     || Rules.loading
     || Settings.loading 
     || BoilerStatus.loading
-    || BoilerStatusHistory.loading
+    || BoilerStatus.loading
 
 
   const scrollToRef = useCallback(inputRef => {
