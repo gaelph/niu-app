@@ -7,7 +7,6 @@ export default class Time {
   minutes: number;
 
   constructor(hours: number | string, minutes: number | string) {
-
     this.hours = parseInt(hours.toString(), 10)
     this.minutes = parseInt(minutes.toString(), 10)
   }

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import dayjs from 'dayjs'
 
@@ -47,13 +47,40 @@ export default ({ onStartEditing }) => {
       Toast.showError()
     }
   })
+  const [localRules, setLocalRules] = useState(Rules.rules)
+
+  useEffect(() => {
+    if (Rules.ready && !Rules.loading) {
+      setLocalRules(Rules.rules)
+    }
+  }, [Rules.rules])
 
   const Settings = useSettings()
   const defaultTarget = Settings.get(DEFAULT_TARGET)
 
+  const debounceTimeout = useRef<number>()
+
+  const debouncedUpdate = useCallback((update) => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current)
+
+    let updatedRules = localRules.map(r => {
+      if (r.id == update.id) {
+        return update
+      }
+
+      return r
+    })
+
+    setLocalRules(updatedRules)
+
+    debounceTimeout.current = setTimeout(() => {
+      Rules.update(update)
+    }, 2 * 2000) as unknown as number
+  }, [Rules, localRules])
+
   // Updates a rule name
   const updateName = useCallback((rule: Rule, name: string) => {
-    Rules.update({ ...rule, name })
+    debouncedUpdate({ ...rule, name })
   }, [Rules])
 
   // Updates a rule active status
@@ -63,7 +90,7 @@ export default ({ onStartEditing }) => {
       next_dates = nextDays(rule.days, new Date())
     }
 
-    Rules.update({ ...rule, active, next_dates })
+    debouncedUpdate({ ...rule, active, next_dates })
   }, [Rules])
 
   // Updates a rule repeat status
@@ -73,7 +100,7 @@ export default ({ onStartEditing }) => {
       next_dates = nextDays(rule.days, new Date())
     }
 
-    Rules.update({ ...rule, repeat, next_dates })
+    debouncedUpdate({ ...rule, repeat, next_dates })
   }, [Rules])
 
   // Updates a rule day value
@@ -85,12 +112,12 @@ export default ({ onStartEditing }) => {
       next_dates = nextDays(update, new Date())
     }
 
-    Rules.update({ ...rule, days: update, next_dates })
+    debouncedUpdate({ ...rule, days: update, next_dates })
   }, [Rules])
 
   // Updates a rule schedule list
   const updateSchedules = useCallback((rule: Rule, schedules: Schedule[]) => {
-    Rules.update({ ...rule, schedules })
+    debouncedUpdate({ ...rule, schedules })
   }, [Rules])
 
   // Adds a schedule to a rule
@@ -130,7 +157,7 @@ export default ({ onStartEditing }) => {
   }, [Rules])
 
   return <RuleList
-    rules={Rules.rules}
+    rules={localRules}
     defaultTemperature={defaultTarget}
     onStartEditing={onStartEditing}
     onRemove={Rules.remove}

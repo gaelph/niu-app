@@ -9,6 +9,10 @@ import { ApolloClient } from 'apollo-client'
 import { HttpLink } from 'apollo-link-http'
 import { ApolloLink, from } from 'apollo-link'
 
+import DebounceLink from 'apollo-link-debounce'
+
+const DEFAULT_DEBOUNCE_TIMEOUT = 100
+
 import { initialState as tempRecordState } from './src/data/temperature-records/queries'
 
 const cache = new InMemoryCache()
@@ -83,6 +87,7 @@ const init = async () => {
   const client = new ApolloClient({
     cache,
     link: from([
+      // new DebounceLink(DEFAULT_DEBOUNCE_TIMEOUT),
       authMiddleware,
       loggerMiddleware,
       httpLink,

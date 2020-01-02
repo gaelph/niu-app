@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useQuery, useMutation } from '@apollo/react-hooks';
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks';
 import { ApolloError } from 'apollo-client'
 
 import { useSettings, TIMEZONE_OFFSET } from '../settings/hooks'
@@ -26,10 +26,7 @@ interface RuleHook {
 const DEFAULT_RULES = []
 
 export function useRules(options?: RulesOptions): RuleHook {
-  const { loading, data, networkStatus } = useQuery(queries.fetchRules, {
-    // fetchPolicy: "no-cache",
-    notifyOnNetworkStatusChange: true
-  })
+  const { loading, data, networkStatus } = useQuery(queries.fetchRules)
   const [createRule, _createStatus] = useMutation(queries.createRule, {
     onCompleted: options && options.onMutationSuccess,
     onError: options && options.onMutationError,
@@ -84,19 +81,18 @@ export function useRules(options?: RulesOptions): RuleHook {
     }
   })
 
-  const rules = data
+  const rules = useMemo(() => data
     ? data.listRules.map(rule => Rule.fromObject(rule))
-    : DEFAULT_RULES
+    : DEFAULT_RULES, [data])
 
   const create = useCallback(() => {
     const rule = Rule.default()
     createRule({ variables: { rule }})
   }, [createRule])
 
-
   const update = useCallback((rule: Rule) => {
-    updateRule({ variables: { rule }})
-  }, [updateRule])
+    updateRule({ variables: { rule } })
+  }, [rules, updateRule])
 
 
   const remove = useCallback(({ id }: Rule) => {

@@ -21,11 +21,8 @@ export class Schedule {
 
   static fromObject(object: {from: string, to: string, high?: number}): Schedule {
     let { from, to, high } = object
-    return {
-      from: Time.from(from),
-      to: Time.from(to),
-      high: high || 20
-    }
+
+    return new Schedule(Time.from(from), Time.from(to), high)
   }
 }
 

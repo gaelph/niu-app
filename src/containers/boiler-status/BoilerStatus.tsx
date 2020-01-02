@@ -7,5 +7,5 @@ import BoilerStatus from '../../components/BoilerStatus'
 export default () => {
   const { latest } = useBoilerStatus()
 
-  return <BoilerStatus status={latest.value} />
+  return <BoilerStatus status={latest ? latest.value : false} />
 }
