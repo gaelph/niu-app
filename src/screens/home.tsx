@@ -59,7 +59,7 @@ export function Home() {
   }, [scrollview])
 
   return (
-    <KeyboardAvoidingView style={{ width: Screen.width, height: Screen.height }}>
+    <KeyboardAvoidingView behavior="height" style={{ width: Screen.width, height: Screen.height }}>
       <ScrollView
         ref={scrollview}
         style={[styles.container, { width: Screen.width, height: Screen.height }]}
@@ -69,7 +69,9 @@ export function Home() {
           <AppBar />
           <Temperature />
           <HoldButton />
-          <TemperatureChart />
+          { Records.records && Records.records.length > 0 &&
+            <TemperatureChart />
+          }
           <RuleList onStartEditing={scrollToRef} />
         </View>
       </ScrollView>
