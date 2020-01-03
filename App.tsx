@@ -1,39 +1,33 @@
 import React from 'react';
-import ErrorRecovery from 'expo-error-recovery';
-// import { setNativeExceptionHandler } from "react-native-exception-handler";
 
-import { Alert, StyleSheet, StatusBar, SafeAreaView } from 'react-native'
+import { Alert, StyleSheet, StatusBar, SafeAreaView, View, ActivityIndicator } from 'react-native'
 
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+import { createAppContainer } from 'react-navigation'
+import { createStackNavigator } from 'react-navigation-stack'
 
 import { Home, Settings } from './src/screens'
 
 import Colors from './src/theme/colors'
 import { useFonts } from './src/theme/fonts'
+import { flex, v } from './src/theme/styles'
 
-import useApolloClient from './graphql-client'
-import { ApolloProvider } from '@apollo/react-hooks';
+import useApolloClient from './src/api'
+import { ApolloProvider } from '@apollo/react-hooks'
 
 
 // Error handling
 ErrorUtils.setGlobalHandler((error) => {
-  // ErrorRecovery.setRecoveryProps({ error })
-
   console.error(error)
 
   Alert.alert(
     error.message,
     error.stack,
     [
-      { text: 'OK'}
+      { text: 'OK' }
     ]
   )
 })
 
-// setNativeExceptionHandler((error) => {
-//   console.warn(error)
-// })
 
 const AppNavigator = createStackNavigator({
   Home: {
@@ -52,21 +46,10 @@ const AppNavigator = createStackNavigator({
 const AppContainer = createAppContainer(AppNavigator);
 
 
-export default function App({ error: previousError }) {
+export default function App() {
   let [loaded, error] = useFonts()
   const client = useApolloClient()
 
-  if (previousError) {
-    console.error(error)
-    Alert.alert(
-        'Error',
-        previousError.message,
-        [
-          { text: 'OK'}
-        ]
-      )
-  }
-  
   return (
     <SafeAreaView style={styles.container}>
       {loaded && client &&
@@ -76,6 +59,11 @@ export default function App({ error: previousError }) {
             <AppContainer />
           </ApolloProvider>
         </>
+      }
+      { (!loaded || !client) &&
+        <View style={[flex, v.center]}>
+          <ActivityIndicator size={90} color={Colors.text.primary} />
+        </View>
       }
     </SafeAreaView>
   )
