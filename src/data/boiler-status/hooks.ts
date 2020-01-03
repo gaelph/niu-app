@@ -5,6 +5,20 @@ import * as queries from "./queries"
 
 import { BoilerStatus } from './model'
 
+function dedup<T extends { id: number }>(array: T[]): T[] {
+  const uniq: T[] = []
+  const keys: number[] = []
+
+  array.forEach(item => {
+    if (!keys.includes(item.id)) {
+      uniq.push(item)
+      keys.push(item.id)
+    }
+  })
+
+  return uniq
+}
+
 /**
  * Hook to locally keep the date of the most recent temperature record
  * This is to avoid refetching all 300 latest temperature records every minute
@@ -60,12 +74,14 @@ export function useBoilerStatus(): BoilerStatusHook {
         updateQuery: (previous, { fetchMoreResult }) => {
           if (!fetchMoreResult) return previous
 
+          const allEvents = dedup([
+            ...fetchMoreResult.getAllEventsType,
+            ...previous.getAllEventsType
+          ])
+
           const update = {
             ...previous,
-            getAllEventsType: [
-              ...fetchMoreResult.getAllEventsType,
-              ...previous.getAllEventsType
-            ]
+            getAllEventsType: allEvents
           }
 
           return update
