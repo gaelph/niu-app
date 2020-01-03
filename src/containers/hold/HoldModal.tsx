@@ -6,37 +6,46 @@ import {
 
 import dayjs from 'dayjs'
 
-import { CurrentState } from '../../data/rules/device-state'
+import { TargetTemperature } from '../../data/target-temperature/model'
+import { Hold } from '../../data/hold/model'
 
 import HoldModalComponent from '../../components/hold/HoldModal'
 
-function eitherTime(value, currentSchedule) {
-  if (value) {
-    if (!value.untilTime.isBefore(dayjs())) {
-      return value.untilTime
-    }
-  }
-    
-  return currentSchedule.nextChange
-}
-
 interface HoldModalProps {
   visible: boolean,
-  onValueChange: (change: { id: string, value: number, untilTime: dayjs.Dayjs }) => void,
+  targetTemperature: TargetTemperature,
+  onValueChange: (change: Hold | null) => void,
   onClose: () => void,
-  value: { id?: string, value: number, untilTime: dayjs.Dayjs },
-  currentSchedule: CurrentState
 }
 
-export function HoldModal({ visible, currentSchedule, onValueChange, onClose, value }: HoldModalProps) {
-  let [high, setHigh] = useState<number>(value ? value.value : 15)
-  let [untilTime, setUntilTime] = useState<dayjs.Dayjs>(eitherTime(value, currentSchedule))
+export function HoldModal({ visible, targetTemperature, onValueChange, onClose }: HoldModalProps) {
+  let [high, setHigh] = useState<number>(targetTemperature && targetTemperature.value ? targetTemperature.value : 15)
+  let [untilTime, setUntilTime] = useState<dayjs.Dayjs>(targetTemperature ? targetTemperature.nextChange : dayjs())
 
   useEffect(() => {
     //@ts-ignore
-    setHigh(parseInt(value.value, 10))
-    setUntilTime(eitherTime(value, currentSchedule))
-  }, [value, currentSchedule])
+    if (!visible) {
+      setHigh(targetTemperature.value)
+      setUntilTime(targetTemperature.nextChange)
+    }
+  }, [targetTemperature, visible])
+
+  const valueChanged = useCallback((high, untilTime?) => {
+    if (high == null) {
+      onValueChange(null)
+      return
+    }
+
+    let hold: Hold
+    if (targetTemperature.hold) {
+      hold = Hold.from({ id: targetTemperature.hold, value: high, untilTime })
+    }
+    else {
+      hold = Hold.new(high, untilTime)
+    }
+
+    onValueChange(hold)
+  }, [targetTemperature])
 
   const selectDateTime = useCallback(async () => {
     let {action, year, month, day } = await DatePickerAndroid.open({
@@ -56,20 +65,19 @@ export function HoldModal({ visible, currentSchedule, onValueChange, onClose, va
       if (action === TimePickerAndroid.timeSetAction) {
         let untilTime = dayjs(date).hour(hour).minute(minute)
         
-        onValueChange({ id: value.id, value: high, untilTime })
+        valueChanged(high, untilTime)
       }
     }
-    setHigh(value.value)
-    setUntilTime(value.untilTime)
-  }, [high, untilTime, onValueChange])
+    
+  }, [high, untilTime, valueChanged])
 
   const defaultDateTime = useCallback(() => {
-    onValueChange({id: value.id, value: high, untilTime })
-  }, [high, untilTime, onValueChange])
+    valueChanged(high, untilTime)
+  }, [high, untilTime, valueChanged])
 
   const resumeSchedule = useCallback(() => {
-    onValueChange(null)
-  }, [onValueChange])
+    valueChanged(null)
+  }, [valueChanged])
 
   const setTemperature = useCallback((temperature) => {
     setHigh(temperature)
@@ -77,9 +85,9 @@ export function HoldModal({ visible, currentSchedule, onValueChange, onClose, va
   
   return <HoldModalComponent
     visible={visible}
-    value={high}
+    value={high || ''}
     untilTime={untilTime}
-    ongoing={!!value.id}
+    ongoing={!!targetTemperature.hold}
     onTemperatureChange={setTemperature}
     onSelectDefaultDateTime={defaultDateTime}
     onSelectDateTime={selectDateTime}

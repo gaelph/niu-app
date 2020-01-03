@@ -126,14 +126,14 @@ export const RESET_APP: SettingParam<void> = {
   }
 }
 
-type SettingGetter<T> = (param: SettingParam<T>) => T | null
-type SettingSetter<T> = (param: SettingParam<T>, value?: T) => void
+type SettingGetter<T> = <T>(param: SettingParam<T>) => T | null
+type SettingSetter<T> = <T>(param: SettingParam<T>, value?: T) => void
 type SettingLister = () => Setting[]
 
 interface SettingsResult {
   loading: boolean
-  get: SettingGetter<any>,
-  set: SettingSetter<any>,
+  get: SettingGetter<unknown>,
+  set: SettingSetter<unknown>,
   all: SettingLister
 }
 

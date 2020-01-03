@@ -1,11 +1,15 @@
+import {useState, useRef, useEffect, useMemo } from 'react'
 import dayjs from 'dayjs'
-// import dayjsPluginUtc from 'dayjs-plugin-utc'
 
-import { Rule, Schedule } from './model'
+import { Rule, Schedule } from '../rules/model'
 import Time from '../../support/time'
 import { weekday } from '../../support/days'
 
-// dayjs.extend(dayjsPluginUtc)
+import { CurrentSchedule, TargetTemperature } from './model'
+
+import { useSettings, TIMEZONE_OFFSET, AWAY_TEMPERATURE } from '../settings/hooks'
+import { useRules } from '../rules/hooks'
+import { useHold } from '../hold/hooks'
 
 function sepearateRepeatAndNonRepeat(rules: Rule[], datetime: dayjs.Dayjs): [Rule[], Rule[]] {
   let repeat: Rule[] = []
@@ -16,8 +20,6 @@ function sepearateRepeatAndNonRepeat(rules: Rule[], datetime: dayjs.Dayjs): [Rul
   rules
   .filter(rule => rule.active)
   .forEach(rule => {
-    // if (!rule.active) return
-
     if (rule.repeat) {
       if (rule.days[day])
         repeat.push(rule)
@@ -44,9 +46,9 @@ function getNextSevenDays(datetime: dayjs.Dayjs): dayjs.Dayjs[] {
   return Object.keys([...new Array(7)]).map(i => datetime.add(parseInt(i, 10), 'day'))
 }
 
-function findSchedule(rules: Rule[], datetime: dayjs.Dayjs): CurrentState {
-  let schedules = flatMap<RuleSchduleAssoc>(rules.map(rule => {
-    let rule_schedule = rule.schedules.filter(schedule => {
+function findSchedule(rules: Rule[], datetime: dayjs.Dayjs): CurrentSchedule {
+  let schedules = flatMap<Schedule>(rules.map(rule => {
+    let schedules = rule.schedules.filter(schedule => {
       let fromInMinutes = schedule.from.toMinutes()
       let toInMinutes = schedule.to.toMinutes()
       let currentTimeInMinutes = Time.fromDayjs(datetime).toMinutes()
@@ -62,16 +64,15 @@ function findSchedule(rules: Rule[], datetime: dayjs.Dayjs): CurrentState {
       if (aFrom < bFrom) return -1;
       if (aFrom > bFrom) return 1;
     })
-    .map(schedule => ({ rule, schedule }))
 
-    return rule_schedule
+    return schedules
   }))
 
   if (schedules.length === 0) return null
 
-  if (isCurrentSchedule(schedules[0].schedule, datetime)) {
+  if (isCurrentSchedule(schedules[0], datetime)) {
     // A schedule is currently being applied
-    let current = schedules[0].schedule
+    let current = schedules[0]
     let nextChange = datetime.set('hour', current.to.hours).set('minute', current.to.minutes)
       
     return {
@@ -79,7 +80,7 @@ function findSchedule(rules: Rule[], datetime: dayjs.Dayjs): CurrentState {
       nextChange
     }
   } else {
-    let next = schedules[0].schedule
+    let next = schedules[0]
     let nextChange = datetime.set('hour', next.from.hours).set('minute', next.from.minutes)
 
     return {
@@ -113,23 +114,11 @@ function flatMap<T>(array: Array<any>): Array<T> {
 //
 // The next temperature change should indicate
 //  - the date and time it occurs
-
-interface RuleSchduleAssoc { 
-  rule: Rule,
-  schedule: Schedule
-}
-
-
-export interface CurrentState {
-  current?: RuleSchduleAssoc | null
-  nextChange?: dayjs.Dayjs
-}
-
-export function currentDeviceState(rules: Rule[], timezoneOffset: number): CurrentState {
+export function currentDeviceState(rules: Rule[], timezoneOffset: number): CurrentSchedule {
   const now = dayjs().utcOffset(timezoneOffset / 60);
   const nextSevenDays = getNextSevenDays(now);
 
-  let current: RuleSchduleAssoc | null = null;
+  let current: Schedule | null = null;
   let nextChange: dayjs.Dayjs | null = null;
 
   for (let i in nextSevenDays) {
@@ -156,3 +145,4 @@ export function currentDeviceState(rules: Rule[], timezoneOffset: number): Curre
 
   return { current, nextChange }
 }
+

@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { View, TouchableNativeFeedback as Touchable, StyleSheet } from 'react-native'
+import React from 'react'
+import { View, StyleSheet } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { FontAwesome5} from '@expo/vector-icons'
 
@@ -7,7 +7,7 @@ import Colors from '../theme/colors'
 
 import IconButton from './buttons/IconButton'
 
-import { CurrentState } from '../data/rules/device-state'
+import { CurrentSchedule } from '../data/target-temperature/model'
 
 enum PillType {
   High = "sun",
@@ -32,7 +32,7 @@ function Pill({ type, selected, onSelect, iconLib }: PillProps): React.ReactElem
 }
 
 interface ModeSelectorProps {
-  deviceState: CurrentState
+  deviceState: CurrentSchedule
 }
 
 export default function ModeSelector({ deviceState }: ModeSelectorProps): React.ReactElement {

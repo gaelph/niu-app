@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useQuery, useMutation } from '@apollo/react-hooks'
+import { ApolloError } from 'apollo-client'
 
 import dayjs from 'dayjs'
 
@@ -11,14 +12,19 @@ interface HoldResult {
   updateHold: (hold: Hold) => void
 }
 
-export function useHold({ onMutationSuccess, onMutationError }): HoldResult | null {
+interface HoldHookOptions {
+  onMutationSuccess?: () => void
+  onMutationError?:   (error: ApolloError) => void
+}
+
+export function useHold(options?: HoldHookOptions): HoldResult | null {
   const { data } = useQuery(queries.fetchHold)
   // Mutations
   // For reasons unknown, create and delete mutations
   // require a manual cache update for Holds 
   const [create, _crateStatus] = useMutation(queries.createHold, {
-    onCompleted: onMutationSuccess,
-    onError: onMutationError,
+    onCompleted: options && options.onMutationSuccess,
+    onError: options && options.onMutationError,
     update(cache, { data: { createHold } }) {
       cache.writeQuery({
         query: queries.fetchHold,
@@ -29,12 +35,12 @@ export function useHold({ onMutationSuccess, onMutationError }): HoldResult | nu
     }
   })
   const [update, _updateStatus] = useMutation(queries.updateHold, {
-    onCompleted: onMutationSuccess,
-    onError: onMutationError,
+    onCompleted: options && options.onMutationSuccess,
+    onError: options && options.onMutationError,
   })
   const [remove, _removeStatus] = useMutation(queries.deleteHold, {
-    onCompleted: onMutationSuccess,
-    onError: onMutationError,
+    onCompleted: options && options.onMutationSuccess,
+    onError: options && options.onMutationError,
     update(cache, _) {
       cache.writeQuery({
         query: queries.fetchHold,

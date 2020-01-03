@@ -1,13 +1,11 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks';
+import { useCallback, useMemo } from 'react'
+import { useQuery, useMutation } from '@apollo/react-hooks';
 import { ApolloError } from 'apollo-client'
 
-import { useSettings, TIMEZONE_OFFSET } from '../settings/hooks'
 
 import * as queries from "./queries"
 import { Rule } from "./model"
 
-import { CurrentState, currentDeviceState } from './device-state'
 
 interface RulesOptions {
   onMutationSuccess: () => void

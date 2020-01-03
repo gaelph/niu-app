@@ -1,14 +1,11 @@
-import React, { useMemo, useState, useCallback, } from 'react'
+import React, { useState, useCallback, } from 'react'
 import { View } from 'react-native'
-import dayjs from 'dayjs'
 
 import { h, m } from '../../theme/styles'
 import Toast from '../../support/toast'
 
 import { useHold } from '../../data/hold/hooks'
-import { useRules } from '../../data/rules/hooks'
-import { currentDeviceState } from '../../data/rules/device-state'
-import { useSettings, AWAY_TEMPERATURE, TIMEZONE_OFFSET } from '../../data/settings/hooks'
+import { useCurrentTargetTemperature } from '../../data/target-temperature/hooks'
 
 import { HoldModal } from './HoldModal'
 import { HoldButton as HoldButtonComponent } from '../../components/hold/HoldButton'
@@ -26,16 +23,7 @@ export default function HoldButton() {
     }
   })
 
-  const { rules } = useRules()
-  const Settings = useSettings()
-  const awayTemperature = Settings.get(AWAY_TEMPERATURE)
-  const timezone = Settings.get(TIMEZONE_OFFSET)
-
-  const currentSchedule = useMemo(() => {
-    if (timezone === null) return {}
-    
-    return currentDeviceState(rules, timezone)
-  }, [rules, timezone])
+  const currentTargetTemperature = useCurrentTargetTemperature()
 
   const onValueChange = useCallback((hold) => {
     updateHold(hold)
@@ -45,12 +33,13 @@ export default function HoldButton() {
   return (
   <View style={[h.justifyCenter, h.alignMiddle, m.t24]}>
     <HoldButtonComponent
-      currentSchedule={currentSchedule}
-      hold={hold}
-      awayTemperature={awayTemperature}
-      timezone={timezone}
+      targetTemperature={currentTargetTemperature}
       onPress={() => setShowModal(true)} />
-    <HoldModal visible={showModal} onClose={() => setShowModal(false)} value={hold} currentSchedule={currentSchedule} onValueChange={onValueChange} />
+    <HoldModal 
+      visible={showModal} 
+      onClose={() => setShowModal(false)} 
+      targetTemperature={currentTargetTemperature}
+      onValueChange={onValueChange} />
   </View>
   )
 }
