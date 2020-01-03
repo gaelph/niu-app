@@ -1,9 +1,12 @@
-import { useMemo, useCallback, useEffect, useRef } from 'react'
+import { useMemo, useCallback, useEffect, useRef, useReducer } from 'react'
 import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks'
 
 import * as queries from "./queries"
 
 import { BoilerStatus } from './model'
+
+import { useCurrentTargetTemperature } from '../target-temperature/hooks'
+import { useTemperatureRecords } from '../temperature-records/hooks'
 
 function dedup<T extends { id: number }>(array: T[]): T[] {
   const uniq: T[] = []
@@ -124,4 +127,76 @@ export function useBoilerStatus(): BoilerStatusHook {
     fetchMore: fetchLatest,
     latest: latest
   }
+}
+
+const POLL_INTERVAL = 1000
+const POLL_TIMEOUT = 30 * 1000
+/**
+ * Polls for boiler status changes every second for 30 second after either:
+ *  - current target temperature changed
+ *  - current room temperature changed
+ * @return {void}
+ */
+export function useAccurateBoilerStatus() {
+  // Data source that can stop the polling
+  const BoilerStatus = useBoilerStatus()
+  // Data sources that can trigger the polling
+  const targetTemperature = useCurrentTargetTemperature()
+  const Records = useTemperatureRecords()
+
+  // interval for polling every second
+  const interval = useRef<number>()
+  // timeout to stop the polling after 30 seconds
+  const timeout = useRef<number>()
+
+  // Stops the polling if the boiler status changes
+  useEffect(() => {
+    // null check
+    if (interval.current && BoilerStatus.latest) {
+      clearInterval(interval.current)
+    }
+  }, [BoilerStatus.latest])
+
+  // Polls every second with a 30 second timeout
+  const startCheck = useCallback(() => {
+    if (interval.current) clearInterval(interval.current)
+    if (timeout.current) clearTimeout(timeout.current)
+
+    interval.current = setInterval(() => {
+      BoilerStatus.fetchMore()
+    }, POLL_INTERVAL) as unknown as number
+
+    timeout.current = setTimeout(() => {
+      clearInterval(interval.current)
+    }, POLL_TIMEOUT) as unknown as number
+  }, [interval, timeout])
+
+  // Starts the polling if:
+  // - boiler is on and room temperature equals target temperature
+  // - boiler is off and room temperature is 0.6˚ below target temperature
+  useEffect(() => {
+    if (BoilerStatus.latest && Records.latest) {
+      if (BoilerStatus.latest.value) {
+        let trigger = targetTemperature.value
+
+        if (Records.latest.value >= trigger) {
+          startCheck()
+        }
+      }
+      else {
+        let trigger = targetTemperature.value - 0.6
+
+        if (Records.latest.value <= trigger) {
+          startCheck()
+        }
+
+      }
+    }
+
+    // Clean up intervals on ummount
+    return () => {
+      clearInterval(interval.current)
+      clearInterval(timeout.current)
+    }
+  }, [BoilerStatus.latest, targetTemperature.value, Records.latest])
 }
