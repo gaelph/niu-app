@@ -75,7 +75,7 @@ export default ({ onStartEditing }) => {
 
     debounceTimeout.current = setTimeout(() => {
       Rules.update(update)
-    }, 2 * 2000) as unknown as number
+    }, 1000) as unknown as number
   }, [Rules, localRules])
 
   // Updates a rule name
