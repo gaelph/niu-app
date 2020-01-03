@@ -57,7 +57,7 @@ const loggerMiddleware = new ApolloLink((operation, forward) => {
       if (data) {
         selections.forEach(selection => {
           if (data.hasOwnProperty(selection)) {
-            console.info(`%c${type} %c${selection} %cOK %c+${duration}ms`, type == "query" ? "color:cyan;" : "color:coral;", "color:white;", "color:lime", "color:gray;")
+            console.info(`%c[${(new Date()).toISOString()}] %c${type} %c${selection} %cOK %c+${duration}ms`, "color:gray;", type == "query" ? "color:cyan;" : "color:coral;", "color:white;", "color:lime", "color:gray;")
           }
         })
       }
@@ -82,6 +82,8 @@ const init = async () => {
     cache,
     storage: AsyncStorage,
   })
+
+  await persistor.restore()
 
   // Continue setting up Apollo as usual.
   const client = new ApolloClient({

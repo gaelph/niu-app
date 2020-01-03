@@ -29,6 +29,8 @@ interface TemperatureRecordResult {
 }
 
 const DEFAULT_RECORDS = []
+const REFRESH_INTERVAL = 60000
+const MIN_INTERVAL = 10000
 
 /**
  * Hook to provide temperature records to a view
@@ -36,7 +38,11 @@ const DEFAULT_RECORDS = []
 export function useTemperatureRecords(): TemperatureRecordResult {
   const client = useApolloClient()
   client.addResolvers(queries.resolvers)
+
   const interval = useRef<number>()
+  const timeout = useRef<number>()
+  const fetchRecently = useRef<boolean>(false)
+
   
   const [since, setSince] = useSince()
 
@@ -55,32 +61,43 @@ export function useTemperatureRecords(): TemperatureRecordResult {
   }, [data])
 
   const fetchLatest = useCallback(() => {
-    try {
-      fetchMore({
-        variables: { after: since },
-        updateQuery: (previous, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return previous
+    if (fetchRecently.current == false) {
+      fetchRecently.current = true
 
-          const update = {
-            ...previous,
-            temperatureRecordsSince: [
-              ...fetchMoreResult.temperatureRecordsSince,
-              ...previous.temperatureRecordsSince
-            ]
+      timeout.current = setTimeout(() => {
+        fetchRecently.current = false
+      }, MIN_INTERVAL) as unknown as number
+
+      try {
+        fetchMore({
+          variables: { after: since },
+          updateQuery: (previous, { fetchMoreResult }) => {
+            if (!fetchMoreResult) return previous
+
+            const update = {
+              ...previous,
+              temperatureRecordsSince: [
+                ...fetchMoreResult.temperatureRecordsSince,
+                ...previous.temperatureRecordsSince
+              ]
+            }
+
+            return update
           }
-
-          return update
-        }
-      })
-    } catch (error) {
-      // ignore console.warn(error)
+        })
+      } catch (error) {
+        // ignore console.warn(error)
+      }
+    }
+    else {
+      console.log('prevented excessive refresh of temperature records')
     }
   }, [since, data, fetchMore])
 
   // Poll every now and then for new temperature records
   useEffect(() => {
     if (interval.current) clearInterval(interval.current)
-    interval.current = setInterval(fetchLatest, 60000) as unknown as number
+    interval.current = setInterval(fetchLatest, REFRESH_INTERVAL) as unknown as number
 
     () => {
       clearInterval(interval.current)

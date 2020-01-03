@@ -48,6 +48,8 @@ interface BoilerStatusHook {
 }
 
 const DEFAULT_HISTORY = []
+const REFRESH_INTERVAL = 60000
+const MIN_INTERVAL = 10000
 
 export function useBoilerStatus(): BoilerStatusHook {
   const client = useApolloClient()
@@ -56,6 +58,9 @@ export function useBoilerStatus(): BoilerStatusHook {
   const { loading, data, fetchMore } = useQuery(queries.fetchBoilerStatusHistory)
 
   const interval = useRef<number>()
+  const timeout = useRef<number>()
+  const fetchRecently = useRef<boolean>(false)
+
   const [since, setSince] = useSince()
 
   // When statuses change, update the since value
@@ -71,34 +76,45 @@ export function useBoilerStatus(): BoilerStatusHook {
   }, [data])
 
   const fetchLatest = useCallback(() => {
-    try {
-      fetchMore({
-        variables: { after: since },
-        updateQuery: (previous, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return previous
+    if (fetchRecently.current == false) {
+      fetchRecently.current = true
 
-          const allEvents = dedup([
-            ...fetchMoreResult.getAllEventsType,
-            ...previous.getAllEventsType
-          ])
+      timeout.current = setTimeout(() => {
+        fetchRecently.current = false
+      }, MIN_INTERVAL) as unknown as number
 
-          const update = {
-            ...previous,
-            getAllEventsType: allEvents
+      try {
+        fetchMore({
+          variables: { after: since },
+          updateQuery: (previous, { fetchMoreResult }) => {
+            if (!fetchMoreResult) return previous
+
+            const allEvents = dedup([
+              ...fetchMoreResult.getAllEventsType,
+              ...previous.getAllEventsType
+            ])
+
+            const update = {
+              ...previous,
+              getAllEventsType: allEvents
+            }
+
+            return update
           }
-
-          return update
-        }
-      })
-    } catch (error) {
-      // ignore console.warn(error)
+        })
+      } catch (error) {
+        // ignore console.warn(error)
+      }
+    }
+    else {
+      console.log('prevented excessive refresh of boiler status')
     }
   }, [since, data, fetchMore])
 
   // Poll every now and then for boiler status update
   useEffect(() => {
     if (interval.current) clearInterval(interval.current)
-    interval.current = setInterval(fetchLatest, 60000) as unknown as number
+    interval.current = setInterval(fetchLatest, REFRESH_INTERVAL) as unknown as number
 
     () => {
       clearInterval(interval.current)
