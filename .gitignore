@@ -19,3 +19,4 @@ yarn-error.log
 apollo.config.js
 .graphqlconfig*
 schema.graphql
+privy.txt
