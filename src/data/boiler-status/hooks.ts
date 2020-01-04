@@ -61,7 +61,7 @@ const DEFAULT_HISTORY = []
 // Refresh boiler status every 60 seconds
 const REFRESH_INTERVAL = 60000
 // Don't allow refetch if one occured less than 10 seconds ago
-const MIN_INTERVAL = 10000
+const MIN_INTERVAL = 1000
 
 /**
  * Periodically fetches boiler status history
@@ -212,6 +212,7 @@ export function useAccurateBoilerStatus(): void {
         let trigger = targetTemperature.value
 
         if (Records.latest.value >= trigger) {
+          console.log('latest Records value is ' + Records.latest.value, '>=', trigger)
           startCheck()
         }
       }
