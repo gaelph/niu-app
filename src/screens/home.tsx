@@ -4,13 +4,17 @@
  * @packageDocumentation
  */
 // External imports
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useEffect, useState } from 'react'
 import {
   StyleSheet,
   View,
   ScrollView,
   KeyboardAvoidingView,
-  RefreshControl
+  RefreshControl,
+  Keyboard,
+  Platform,
+  UIManager,
+  LayoutAnimation
 } from 'react-native'
 
 // Styles and dimensions
@@ -32,6 +36,11 @@ import AddRuleButton from 'containers/rules/AddRuleButton'
 import Temperature from 'containers/temperature-records/Temperature'
 import TemperatureChart from 'containers/temperature-records/TemperatureChart'
 
+if (Platform.OS === 'android') {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
 export function Home() {
   let Screen = useDimensions('window')
@@ -55,42 +64,80 @@ export function Home() {
     || BoilerStatus.loading
 
 
-  const scrollToRef = useCallback(inputRef => {
-    inputRef.current.measure((x: number, _y: number, _w: number, _h: number, _px: number, py: number) => {
-      scrollview.current.scrollTo({ x, y: py - StatusBar.height, animated: true })
-    })
-  }, [scrollview])
+  const [paddingBottom, setPaddingBottom] = useState<number>(0)
+  const refToScrollTo = useRef()
 
-  return (
-    <KeyboardAvoidingView behavior="height" style={{ width: Screen.width, height: Screen.height }}>
+  const scrollToRef = useCallback((height) => {
+    if (refToScrollTo.current !== undefined) {
+      //@ts-ignore
+      refToScrollTo.current.measure((x: number, _y: number, _w: number, _h: number, _px: number, py: number) => {
+        console.log('visible height', Screen.height - height)
+        console.log('Scroll to', py + 54)
+        
+        scrollview.current.scrollTo({ x, y:  py + 54, animated: true })
+      })
+    }
+  }, [scrollview, Screen.height])
+
+  const onStartEditing = useCallback(inputRef => {
+    refToScrollTo.current = inputRef.current
+    scrollToRef(paddingBottom)
+  }, [paddingBottom])
+
+  useEffect(() => {
+    let upListener = Keyboard.addListener("keyboardDidShow", (e) => {
+      LayoutAnimation.easeInEaseOut()
+      setPaddingBottom(e.endCoordinates.height)
+      setTimeout(() => scrollToRef(e.endCoordinates.height), 10)
+    })
+
+    let downListener = Keyboard.addListener("keyboardDidHide", () => {
+      LayoutAnimation.configureNext(
+        LayoutAnimation.create(
+          100, 'easeIn', 'opacity'
+          )
+      )
+      setPaddingBottom(0)
+      refToScrollTo.current = undefined
+    })
+
+    return () => {
+      upListener.remove()
+      downListener.remove()
+    }
+  })
+
+  console.log('screen', Screen)
+
+  return (<>
+    <View style={{ flex: 1, width: Screen.width, height: Screen.height - paddingBottom, marginBottom: paddingBottom }}>
       <ScrollView
         ref={scrollview}
         style={[styles.container, { width: Screen.width, height: Screen.height }]}
         contentContainerStyle={[styles.contentContainer, { width: Screen.width }]}
         refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={appLoading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + StatusBar.height} />}>
-        <View style={styles.view}>
-          <AppBar />
-          <Temperature />
-          <HoldButton />
-          { Records.records && Records.records.length > 0 &&
-            <TemperatureChart />
-          }
-          <RuleList onStartEditing={scrollToRef} />
-        </View>
+        <AppBar />
+        <Temperature />
+        <HoldButton />
+        { Records.records && Records.records.length > 0 &&
+          <TemperatureChart />
+        }
+        <RuleList onStartEditing={onStartEditing} />
       </ScrollView>
       <AddRuleButton />
-    </KeyboardAvoidingView>
-  );
+    </View>
+  </>);
 }
 
 
 const styles = StyleSheet.create({
   container: {
+    flex: null,
     backgroundColor: Colors.background,
   },
   contentContainer: {
     flex: null,
-    width: '100%',
+    // width: '100%',
     alignItems: 'center',
     paddingTop: StatusBar.height,
     paddingBottom: Dimensions.appBar.height + StatusBar.height,
