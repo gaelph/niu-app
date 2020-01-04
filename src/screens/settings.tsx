@@ -18,6 +18,8 @@ import SettingsList from 'containers/settings/List'
 export const Settings = () => {
   let Screen = useDimensions('window')
 
+  console.log('settings', Screen)
+
   return <View style={{ width: Screen.width, height: Screen.height, paddingTop: StatusBar.height, backgroundColor: Colors.background, }}>
     <SettingsBar />
     <SettingsList />

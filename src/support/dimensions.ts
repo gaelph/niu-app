@@ -22,7 +22,7 @@ export function useDimensions(type: 'window' | 'screen') {
     Dim.addEventListener("change", handler)
 
     return () => Dim.removeEventListener("change", handler)
-  })
+  }, [setScreen])
 
   return screen
 }

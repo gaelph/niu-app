@@ -110,11 +110,11 @@ export function Home() {
   console.log('screen', Screen)
 
   return (<>
-    <View style={{ flex: 1, width: Screen.width, height: Screen.height - paddingBottom, marginBottom: paddingBottom }}>
+    <View style={{ flex: 1, height: Screen.height - paddingBottom, marginBottom: paddingBottom }}>
       <ScrollView
         ref={scrollview}
-        style={[styles.container, { width: Screen.width, height: Screen.height }]}
-        contentContainerStyle={[styles.contentContainer, { width: Screen.width }]}
+        style={[styles.container]}
+        contentContainerStyle={[styles.contentContainer]}
         refreshControl={<RefreshControl colors={[Colors.text.primary]} refreshing={appLoading} onRefresh={refresh} progressViewOffset={Dimensions.appBar.height + StatusBar.height} />}>
         <AppBar />
         <Temperature />
@@ -132,7 +132,7 @@ export function Home() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: null,
+    flex: 1,
     backgroundColor: Colors.background,
   },
   contentContainer: {
