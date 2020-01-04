@@ -212,7 +212,6 @@ export function useAccurateBoilerStatus(): void {
         let trigger = targetTemperature.value
 
         if (Records.latest.value >= trigger) {
-          console.log('latest Records value is ' + Records.latest.value, '>=', trigger)
           startCheck()
         }
       }

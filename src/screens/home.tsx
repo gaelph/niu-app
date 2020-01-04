@@ -71,9 +71,6 @@ export function Home() {
     if (refToScrollTo.current !== undefined) {
       //@ts-ignore
       refToScrollTo.current.measure((x: number, _y: number, _w: number, _h: number, _px: number, py: number) => {
-        console.log('visible height', Screen.height - height)
-        console.log('Scroll to', py + 54)
-        
         scrollview.current.scrollTo({ x, y:  py + 54, animated: true })
       })
     }
@@ -106,8 +103,6 @@ export function Home() {
       downListener.remove()
     }
   })
-
-  console.log('screen', Screen)
 
   return (<>
     <View style={{ flex: 1, height: Screen.height - paddingBottom, marginBottom: paddingBottom }}>
