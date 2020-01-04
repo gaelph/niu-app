@@ -1,10 +1,15 @@
+/**
+ * @category Components
+ * @module components/shared
+ * @packageDocumentation
+ */
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import IconButton from '../buttons/IconButton'
-import { h, text } from '../../theme/styles'
-import Colors from '../../theme/colors'
+import { h, text } from 'theme/styles'
+import Colors from 'theme/colors'
 
 interface TemperaturePickerProps {
   value: string,
@@ -12,13 +17,13 @@ interface TemperaturePickerProps {
   onDecrement: () => void
 }
 
+/**
+ * A simple picker for temperature
+ */
 export default function TemperaturePicker({ value, onIncrement, onDecrement }: TemperaturePickerProps) {
-  
-
   return (
     <View style={[h.center, h.alignMiddle]}>
       <IconButton style={styles.round} name="minus" provider={Feather} onPress={onDecrement} size={18} color={Colors.grey} />
-
 
       <Text style={[text.default, text.accent, {fontSize: 64, width: 98, textAlign: 'center' }]}>
         {value}˚
@@ -30,6 +35,7 @@ export default function TemperaturePicker({ value, onIncrement, onDecrement }: T
   )
 }
 
+/** @hidden */
 const styles = StyleSheet.create({
   round: {
     ...h.center,

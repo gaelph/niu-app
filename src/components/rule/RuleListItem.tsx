@@ -1,57 +1,55 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+/**
+ * @category Components
+ * @module components/rule
+ * @packageDocumentation
+ */
+import React, { useRef, useEffect, useState } from 'react'
 import { View, Text, TextInput, CheckBox, Switch, StyleSheet, TouchableNativeFeedback as Touchable, Animated, TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import utc from 'dayjs/plugin/utc'
 
+// TODO: Move to App initialization
 dayjs.extend(relativeTime)
 dayjs.extend(utc)
 
-
 import IconButton from '../buttons/IconButton'
 
-import { text, flex, h, v, m, p } from '../../theme/styles'
-import Colors from '../../theme/colors'
+import { text, flex, h, v, m, p } from 'theme/styles'
+import Colors from 'theme/colors'
 
-import { Rule, Schedule } from '../../data/rules/model'
-import { Day, DayShortNames, sortDays } from '../../support/days'
-import Time from '../../support/time'
-import { weekday } from '../../support/days'
+import { Rule, Schedule } from 'data/rules/model'
+import { Day, DayShortNames, sortDays } from 'support/days'
+import Time from 'support/time'
+import { weekday } from 'support/days'
 
 import TimeBar from './TimeBar'
-import TemperatureSetButton from '../../containers/temperature-records/TemperatureSetButton'
+import TemperatureSetButton from 'containers/temperature-records/TemperatureSetButton'
 import ActionButton from './ActionButton'
-
-
-export function FadeInOut({ duration, children }) {
-  let opacity = new Animated.Value(0)
-  useEffect(() => {
-    Animated.timing(opacity, { toValue: 1, duration }).start()
-
-    return () => {
-      Animated.timing(opacity, { toValue: 0, duration }).start()
-    }
-  }, [])
-
-  return (
-    <Animated.View style={{ opacity: opacity }}>{children}</Animated.View>
-  )
-}
 
 
 interface HeaderProps {
   rule: Rule
   editing: boolean,
+  /** Used to scroll to the input when the focus on it */
   inputRef: React.MutableRefObject<TextInput>,
-  onStartEditing: (inputRef: React.MutableRefObject<TextInput>) => void,
   onNameChange: (rule: Rule, name: string) => void,
   onActiveChange: (rule: Rule, active: boolean) => void,
 }
 
-export function Header({ rule, editing, inputRef, onNameChange, onActiveChange }: HeaderProps) {
+/**
+ * Rule Item Header\
+ * Shows the Rule name and active Switch
+ * @hidden
+ */
+export function Header(props: HeaderProps) {
+  const { rule, editing, inputRef, onNameChange, onActiveChange } = props
   const { name, repeat, active, days, next_dates: nextDates } = rule
 
+  // If the rule is set active, but a non-repeat one,
+  // Don't show it as active if all the dates it
+  // was set for are past
   let actualActive = repeat
     ? active
     : active && !nextDates.every(d => {
@@ -60,6 +58,8 @@ export function Header({ rule, editing, inputRef, onNameChange, onActiveChange }
       return date.isBefore(today, 'day')
     })
 
+  // A string such as Mon, Tue, Fri... for repeat Rules
+  // Like Today, Fri, Sun for non repeat
   const daysString = nextDates.length == 0 
   ? Object.keys(days)
     .filter(day => days[day])
@@ -88,12 +88,12 @@ export function Header({ rule, editing, inputRef, onNameChange, onActiveChange }
     })
     .join(', ')
 
+  // Autofocus the input when editing starts
   useEffect(() => {
     editing && inputRef.current && inputRef.current.focus()
   }, [editing, inputRef])
 
   return (
-    // <View style={[h.alignStart, p[8], p.b0, headerStyles.container]}>
     <View style={[h.alignStart, p[8], p.b0, { flexDirection: 'row' }]}>
       <View collapsable={false} style={flex}>
         <View style={[h.alignMiddle, flex ]}>
@@ -109,43 +109,64 @@ export function Header({ rule, editing, inputRef, onNameChange, onActiveChange }
   )
 }
 
+
 interface DaySelectorProps {
   rule: Rule
   onDayChange: (rule: Rule, day: Day, value: boolean) => void,
 }
 
-export function DaySelector({ rule, onDayChange }: DaySelectorProps) {
+/**
+ * Day Selector\
+ * Selector for days when editing the Rule\
+ * Allows the user to select on which day the rule should happen
+ * @hidden
+ */
+export function DaySelector(props: DaySelectorProps) {
+  const { rule, onDayChange } = props
   const { id: ruleId, days } = rule
 
   return (
-    // <FadeInOut duration={400}>
-      <View style={[flex, m.t8, h.justifyLeft, h.alignMiddle]}>
-      {
-        Object.keys(DayShortNames)
-        .map((Day, idx) => (
-          <Touchable key={`${ruleId}_${Day.toString()}`} onPress={() => onDayChange(rule, idx.toString() as unknown as Day, !days[idx])}>
-            <View style={[v.center, m.r4, dayStyles.dayCircle, { opacity: days[idx] ? 1 : 0.4 }]}>
-              <Text style={[text.default, text.primary, text.bold, text.small]}>{DayShortNames[Day].charAt(0)}</Text>
-            </View>
-          </Touchable>
-        ))
-      }
-      </View>
-    // </FadeInOut>
+    <View style={[flex, m.t8, h.justifyLeft, h.alignMiddle]}>
+    {
+      Object.keys(DayShortNames)
+      .map((Day, idx) => (
+        <Touchable key={`${ruleId}_${Day.toString()}`} onPress={() => onDayChange(rule, idx.toString() as unknown as Day, !days[idx])}>
+          <View style={[v.center, m.r4, dayStyles.dayCircle, { opacity: days[idx] ? 1 : 0.4 }]}>
+            <Text style={[text.default, text.primary, text.bold, text.small]}>{DayShortNames[Day].charAt(0)}</Text>
+          </View>
+        </Touchable>
+      ))
+    }
+    </View>
   )
 }
 
-export function RepeatCheckBox({ repeat, onChange }) {
+
+interface RepeatCheckBox {
+  repeat: boolean
+  onChange: (value: boolean) => void
+}
+
+/**
+ * Repeat Check Box\
+ * Allows the user to set the rule as a repeat or non-repeat one
+ * @hidden
+ */
+export function RepeatCheckBox(props) {
+  const { repeat, onChange } = props
   return (
-    // <FadeInOut duration={400}>
-      <View style={[h.justifyRight, h.alignMiddle, m.t8, dayStyles.repeatContainer]} collapsable={false}>
-        <Text style={[text.default, text.small]}>Repeat</Text>
-        <CheckBox value={repeat} onValueChange={onChange} />
-      </View>
-    // </FadeInOut>
+    <View style={[h.justifyRight, h.alignMiddle, m.t8, dayStyles.repeatContainer]} collapsable={false}>
+      <Text style={[text.default, text.small]}>Repeat</Text>
+      <CheckBox value={repeat} onValueChange={onChange} />
+    </View>
   )
 }
 
+/**
+ * @hidden
+ * Opens a Time picker for Schedules
+ * @param {"from" | "to"} property Which property of the Schedule this Time Picker is for
+ */
 async function openTimePicker(schedule: Schedule, property: "from" | "to"): Promise<Schedule | undefined> {
   let time = schedule[property]
   let {action, hour, minute} = await TimePickerAndroid.open({
@@ -162,13 +183,22 @@ async function openTimePicker(schedule: Schedule, property: "from" | "to"): Prom
   }
 }
 
+
 type TimeSelectorProps = {
   schedule: Schedule,
   prop: "from" | "to",
   onChange: (schedule: Schedule) => void
 }
 
-export function TimeSelector({ schedule, prop, onChange }: TimeSelectorProps) {
+/**
+ * Time Selector\
+ * Allows the user to pick start and end times for [[Schedule]]s
+ * @hidden
+ */
+// TODO: Input validation, a user should not be able to pick a end time that's sooner than the start time
+export function TimeSelector(props: TimeSelectorProps) {
+  const { schedule, prop, onChange } = props
+
   return (
     <Touchable onPress={async () => {
       let newSchedule = await openTimePicker(schedule, prop)
@@ -182,9 +212,19 @@ export function TimeSelector({ schedule, prop, onChange }: TimeSelectorProps) {
 }
 
 
+
 interface RuleListItemProps {
   rule: Rule
+  /** 
+   * Default temperature setting used when creating new schedules.\
+   * See [[Settings]]
+   */
   defaultTemperature: number
+  /**
+   * Called when user starts editing a [[Rule]]\
+   * The `inputRef` passed as parameter can be used
+   * to scroll the containing `ScrollView` to it
+   */
   onStartEditing: (inputRef: any) => void
   onRemove: (rule: Rule) => void
   onNameChange: (rule: Rule, name: string) => void
@@ -196,7 +236,12 @@ interface RuleListItemProps {
   onRemoveSchedule: (rule: Rule, idx: number) => void
 }
 
-export default (props: RuleListItemProps) => {
+/**
+ * Rule List Item\
+ * Displays a single Rule in the Rule List 
+ * @hidden
+ */
+export default function RuleListItem (props: RuleListItemProps) {
   const {
     rule,
     defaultTemperature,
@@ -212,9 +257,12 @@ export default (props: RuleListItemProps) => {
   } = props
 
 
+  // Due to drawing the TimeBar in SVG, width has to be know `onLayout`
   const [width, setWidth] = useState<number>(0)
-  const [editing, setEditing] = useState<boolean>(rule.name === null || rule.name === undefined)
 
+  // TODO: This should be handled from this list instead
+  const [editing, setEditing] = useState<boolean>(rule.name === null || rule.name === undefined)
+  // Used for auto scrolling when focus is on the Rule name input
   const inputRef = useRef<TextInput>()
 
   const {
@@ -233,7 +281,6 @@ export default (props: RuleListItemProps) => {
         <View collapsable={false}>
           {/* Header of the rule view */}
           <Header rule={rule} editing={editing} inputRef={inputRef}
-            onStartEditing={onStartEditing}
             onNameChange={onNameChange}
             onActiveChange={onActiveChange}
           />
@@ -294,13 +341,9 @@ export default (props: RuleListItemProps) => {
   )
 }
 
-const headerStyles = StyleSheet.create({
-  container: {
-    // position: 'relative',
-    // overflow: 'visible'
-  }
-})
-
+/**
+ * @hidden
+ */
 const dayStyles = StyleSheet.create({
   dayCircle: {
     width: 24,
@@ -314,6 +357,9 @@ const dayStyles = StyleSheet.create({
   }
 })
 
+/**
+ * @hidden
+ */
 const styles = StyleSheet.create({
   item: {
     borderBottomWidth: 1,

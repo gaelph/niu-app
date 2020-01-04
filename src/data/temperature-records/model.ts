@@ -1,3 +1,9 @@
+/**
+ * @category Data Model
+ * @module data/temperature-records/model
+ * @packageDocumentation
+ */
+
 interface TemperatureRecordEntity {
   id: number;
   value: number;
@@ -5,6 +11,9 @@ interface TemperatureRecordEntity {
   modifiedOn: string;
 }
 
+/**
+ * Data structure to manipulate temperature records
+ */
 export class TemperatureRecord {
   id?: number
   value: number

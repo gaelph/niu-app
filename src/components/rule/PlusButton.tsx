@@ -1,12 +1,28 @@
+/**
+ * @category Components
+ * @module components/rule
+ * @packageDocumentation
+ */
 import React from 'react';
 import { View, StyleSheet } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import IconButton from '../buttons/IconButton'
 
-import Colors from '../../theme/colors'
-import Dimensions from '../../theme/dimensions'
+import Colors from 'theme/colors'
+import Dimensions from 'theme/dimensions'
 
-export default function PlusButton({ onPress }) {
+interface PlusButtonProps {
+  /** React to touch events */
+  onPress: () => void
+}
+
+/**
+ * A button to add a Rule\
+ * It is positionned at the bottom center of the view
+ */
+export default function PlusButton(props: PlusButtonProps) {
+  const { onPress } = props
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -16,6 +32,9 @@ export default function PlusButton({ onPress }) {
   )
 } 
 
+/**
+ * @hidden
+ */
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',

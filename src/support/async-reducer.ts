@@ -1,4 +1,11 @@
-
+/**
+ * # Async Reducer
+ * A Reducer React Hook to help with async queries, 
+ * such as loading from storage or fetching from a server
+ * @category Support
+ * @module support/async-reducer
+ * @packageDocumentation
+ */
 
 export type AsyncReducerState<T> = {
   data: T,

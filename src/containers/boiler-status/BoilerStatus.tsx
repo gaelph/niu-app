@@ -1,12 +1,25 @@
-import React from 'react';
+/**
+ * # Boiler Status Containers
+ * ```ts
+ * import BoilerStatus from 'containers/boiler-status/BoilerStatus'
+ * ```
+ * @category Containers
+ * @module containers/boiler-status
+ * @packageDocumentation
+ */
+import React from 'react'
 
-import { useBoilerStatus, useAccurateBoilerStatus } from '../../data/boiler-status/hooks'
+import { useBoilerStatus, useAccurateBoilerStatus } from 'data/boiler-status/hooks'
 
-import BoilerStatus from '../../components/BoilerStatus'
+import BoilerStatusComponent from 'components/BoilerStatus'
 
-export default () => {
+/**
+ * Displays a boiler status indicator
+ * that updates whenever it changes
+ */
+export default function BoilerStatus(): React.ReactElement {
   const { latest } = useBoilerStatus()
   useAccurateBoilerStatus()
 
-  return <BoilerStatus status={latest ? latest.value : false} />
+  return <BoilerStatusComponent status={latest ? latest.value : false} />
 }

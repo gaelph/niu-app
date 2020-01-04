@@ -20,3 +20,4 @@ apollo.config.js
 .graphqlconfig*
 schema.graphql
 privy.txt
+docs

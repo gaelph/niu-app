@@ -1,1 +1,0 @@
-export { useTemperatureRecords } from './hooks'

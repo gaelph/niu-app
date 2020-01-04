@@ -1,3 +1,20 @@
+/**
+ * React Hook use to fetch and interact with Holds
+ * 
+ * **Example**
+ * ```ts
+ * import { useHold } from 'data/hold/hooks'
+ * 
+ * function Container() {
+ *   const { hold, updateHold } = useHold()
+ * 
+ *   return <Component hold={hold} />
+ * }
+ * ```
+ * @category Data Hooks
+ * @module data/hold/hooks
+ * @packageDocumentation
+ */
 import { useCallback } from 'react'
 import { useQuery, useMutation } from '@apollo/react-hooks'
 import { ApolloError } from 'apollo-client'
@@ -7,17 +24,24 @@ import dayjs from 'dayjs'
 import * as queries from "./queries"
 import { Hold } from "./model"
 
-interface HoldResult {
+interface HoldHook {
+  /** Latest found hold */
   hold: Hold
+  /** 
+   * Creates, updates or removes a Hold\
+   * Pass `null` as parameter to remove
+   */
   updateHold: (hold: Hold) => void
 }
 
 interface HoldHookOptions {
+  /** Called if a mutation is successful */
   onMutationSuccess?: () => void
+  /** Called if a mutation fails */
   onMutationError?:   (error: ApolloError) => void
 }
 
-export function useHold(options?: HoldHookOptions): HoldResult | null {
+export function useHold(options?: HoldHookOptions): HoldHook | null {
   const { data } = useQuery(queries.fetchHold)
   // Mutations
   // For reasons unknown, create and delete mutations
@@ -34,10 +58,12 @@ export function useHold(options?: HoldHookOptions): HoldResult | null {
       })
     }
   })
+
   const [update, _updateStatus] = useMutation(queries.updateHold, {
     onCompleted: options && options.onMutationSuccess,
     onError: options && options.onMutationError,
   })
+
   const [remove, _removeStatus] = useMutation(queries.deleteHold, {
     onCompleted: options && options.onMutationSuccess,
     onError: options && options.onMutationError,

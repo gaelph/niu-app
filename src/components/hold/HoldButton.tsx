@@ -1,18 +1,28 @@
+/**
+ * @category Components
+ * @module components/hold
+ * @packageDocumentation
+ */
 import React from 'react'
 import { View, Text, TouchableNativeFeedback as Touchable, StyleSheet } from 'react-native'
 
-import { text } from '../../theme/styles'
-import Colors from '../../theme/colors'
-import { TargetTemperature } from '../../data/target-temperature/model'
-
-
+import { text } from 'theme/styles'
+import Colors from 'theme/colors'
+import { TargetTemperature } from 'data/target-temperature/model'
 
 interface HoldButtonProps {
+  /** [[TargetTemperature]] object containing the information to be displayed */
   targetTemperature: TargetTemperature
+  /** React to touch events */
   onPress: () => void
 }
 
-export function HoldButton ({ targetTemperature, onPress }: HoldButtonProps) {
+/**
+ * Displays the current target temperature, next change and it results from regular schedule or a hold
+ */
+// TODO: Rename to TargetTemperatureButton or something similar
+export function HoldButton (props: HoldButtonProps) {
+  const { targetTemperature, onPress } = props
 
   return (
     <Touchable onPress={onPress}>
@@ -25,7 +35,9 @@ export function HoldButton ({ targetTemperature, onPress }: HoldButtonProps) {
   )
 }
 
-
+/**
+ * @hidden
+ */
 const styles = StyleSheet.create({
   timeText: {
     fontSize: 16,

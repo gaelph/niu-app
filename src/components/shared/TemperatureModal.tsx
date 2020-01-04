@@ -1,11 +1,32 @@
+/**
+ * @category Components
+ * @module components/shared
+ * @packageDocumentation
+ */
 import React from 'react'
 import { View, Text, Modal, StyleSheet } from 'react-native'
 import Button from '../buttons/Button'
-import TemperaturePicker from '../../containers/temperature-records/TemperaturePicker'
+import TemperaturePicker from 'containers/temperature-records/TemperaturePicker'
 
-import Colors from '../../theme/colors'
+import Colors from 'theme/colors'
 
-export default function TemperatureModal({ visible, onValueChange, onClose, onConfirm, value, children }) {
+interface TemperatureModalProps {
+  visible: boolean
+  value: string | number
+  /** Message displayed in the modal */
+  children: React.ReactText | React.ReactText[]
+  onValueChange: (value: number | string) => void
+  /** User clicked Ok */
+  onConfirm: () => void
+  /** User clicked Cancel */
+  onClose: () => void
+}
+
+/**
+ * A modal dialog to let user pick a temperature setting
+ */
+export default function TemperatureModal(props: TemperatureModalProps) {
+  const { visible, onValueChange, onClose, onConfirm, value, children } = props
 
   return <Modal
     visible={visible}
@@ -35,6 +56,7 @@ export default function TemperatureModal({ visible, onValueChange, onClose, onCo
   </Modal>
 }
 
+/** @hidden */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

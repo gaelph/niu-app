@@ -1,7 +1,16 @@
+/**
+ * # Style helpers
+ * @category Theme
+ * @module theme/styles
+ * @packageDocumentation
+ */
 import { StyleSheet } from 'react-native'
 
 import Colors from './colors'
 
+/**
+ * Text related styles short hands
+ */
 export const text = StyleSheet.create({
   default: {
     color: 'gray',
@@ -34,18 +43,30 @@ export const text = StyleSheet.create({
   }
 })
 
+/**
+ * Sets flex to 1
+ */
 export const flex = {
   flex: 1
 }
 
+/**
+ * Sets the direction to row
+ */
 export const row = {
   flexDirection: 'row' as "row"
 }
 
+/**
+ * Sets the direction to column
+ */
 export const column = {
   flexDirection: 'column' as "column"
 }
 
+/**
+ * Alignment helpers for horizontal (row) layout
+ */
 export const h = StyleSheet.create({
   alignStart: {
     ...row,
@@ -78,6 +99,9 @@ export const h = StyleSheet.create({
   }
 })
 
+/**
+ * Alignment helpers for vertical (column) layout
+ */
 export const v = StyleSheet.create({
   alignStart: {
     ...column,
@@ -258,5 +282,30 @@ const paddings: Paddings = (() => {
   }, {} as Paddings)
 })()
 
+/**
+ * Margin helpers\
+ * `m[8]`  sets all margins to 8px\
+ * `m.t8`  sets top margin to 8px\
+ * `m.r8`  sets right margin to 8px\
+ * `m.b8`  sets bottom margin to 8px\
+ * `m.l8`  sets left margin to 8px\
+ * `m.h8`  sets horizontal margin to 8px\
+ * `m.v8`  sets vertical margin to 8px\
+ * 
+ * valid margin values are: 0, 4, 8, 12, 16, 20, 24, 32
+ */
 export const m = StyleSheet.create(margins)
+
+/**
+ * Padding helpers\
+ * `p[8]`  sets all paddings to 8px\
+ * `p.t8`  sets top padding to 8px\
+ * `p.r8`  sets right padding to 8px\
+ * `p.b8`  sets botto padding to 8px\
+ * `p.l8`  sets left padding to 8px\
+ * `p.h8`  sets horizontal padding to 8px\
+ * `p.v8`  sets vertical padding to 8px\
+ * 
+ * valid padding values are: 0, 4, 8, 12, 16, 20, 24, 32
+ */
 export const p = StyleSheet.create(paddings)

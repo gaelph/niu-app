@@ -1,6 +1,14 @@
+/**
+ * # Fonts
+ * 
+ * Custom fonts loader
+ * @category Theme
+ * @module theme/fonts
+ * @packageDocumentation
+ */
 import * as Font from 'expo-font'
 import { useReducer, useEffect } from 'react'
-import { reducer, AsyncActions} from '../support/async-reducer'
+import { reducer, AsyncActions} from 'support/async-reducer'
 
 const fonts = {
   'Raleway-Black': require('../../assets/fonts/Raleway-Black.ttf'),
@@ -23,8 +31,19 @@ const fonts = {
   'Raleway-ThinItalic': require('../../assets/fonts/Raleway-ThinItalic.ttf'),
 }
 
-export function useFonts() {
-  let [state, dispatch] = useReducer(...reducer())
+/**
+ * Tuple representing the fonts loading state.
+ * - first element is a boolean that is `true` if fonts are **loaded**
+ * - second element is a boolean that is `true` if fonts are **loading**
+ * - third element is an `Error`, undefined if none occurred
+ */
+export type FontsHookResult = [boolean, boolean, Error]
+
+/**
+ * React Hook to load fonts
+ */
+export function useFonts(): FontsHookResult {
+  let [state, dispatch] = useReducer(...reducer<boolean>())
 
   useEffect(() => {
     dispatch({ type: AsyncActions.Fetching })

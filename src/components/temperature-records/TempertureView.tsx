@@ -1,18 +1,29 @@
-import React from 'react';
-import { View, Text, StyleSheet } from'react-native';
+/**
+ * @category Components
+ * @module components/temperature-records
+ * @packageDocumentation
+ */
+import React from 'react'
+import { View, Text, StyleSheet } from'react-native'
 
-import { TemperatureRecord } from '../../data/temperature-records/model'
+import { TemperatureRecord } from 'data/temperature-records/model'
 
-import Colors from '../../theme/colors'
+import Colors from 'theme/colors'
 
-import BoilerStatus from '../../containers/boiler-status/BoilerStatus'
+import BoilerStatus from 'containers/boiler-status/BoilerStatus'
 
+/** 
+ * @hidden 
+ * Utility for displaying the temperature
+ */
 const temp = {
+  // Gets the integer part of a float (or "--")
   integer(t: number): string {
     return t !== null
       ? Math.floor(t).toString()
       : "--"
   },
+  // Gets the decimal part of a float, one digit (or "-")
   decimals(t: number): string {
     return t !== null
       ? Math.floor((t - this.integer(t)) * 10).toString()
@@ -24,7 +35,11 @@ type TemperatureViewProps = {
   record: TemperatureRecord
 }
 
-export default function TemperatureView({ record }: TemperatureViewProps): React.ReactElement {
+/**
+ * The main, big, temperature display on the Home screen
+ */
+export default function TemperatureView(props: TemperatureViewProps): React.ReactElement {
+  const { record } = props
   const value = record ? record.value : null
 
   return (
@@ -41,6 +56,7 @@ export default function TemperatureView({ record }: TemperatureViewProps): React
   )
 }
 
+/** @hiddens */
 const styles = StyleSheet.create({
   content: {
     width: '100%',

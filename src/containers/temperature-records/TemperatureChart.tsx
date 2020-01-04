@@ -1,15 +1,23 @@
+/**
+ * @category Containers
+ * @module containers/temperature-records
+ * @packageDocumentation
+ */
 import React, { useMemo } from 'react'
 
-import { TemperatureRecord } from '../../data/temperature-records/model'
-import { BoilerStatus } from '../../data/boiler-status/model'
+import { TemperatureRecord } from 'data/temperature-records/model'
+import { BoilerStatus } from 'data/boiler-status/model'
 
-import { useTemperatureRecords } from '../../data/temperature-records/hooks'
-import { useBoilerStatus } from '../../data/boiler-status/hooks'
+import { useTemperatureRecords } from 'data/temperature-records/hooks'
+import { useBoilerStatus } from 'data/boiler-status/hooks'
 
-import { useDimensions } from '../../support'
+import { useDimensions } from 'support'
 
-import RecordsChart from '../../components/temperature-records/RecordsChart'
+import RecordsChart from 'components/temperature-records/RecordsChart'
 
+/**
+ * Keeps only peek records
+ */
 function minMax(records: TemperatureRecord[]): TemperatureRecord[] {
   let minAndMax: TemperatureRecord[] = []
   let previousAscent = 0;
@@ -48,6 +56,10 @@ interface StatusRange {
   to: Date
 }
 
+/**
+ * Builds a list of ranges in time where the boiler was on or off
+ * base on a list of BoilerStatus events
+ */
 function makeStatusRanges(statuses: BoilerStatus[]): StatusRange[] {
   let result = []
   const statusStack = [...statuses]
@@ -87,7 +99,11 @@ const HOUR   = 60 * MINUTE
 
 const DEFAULT_RECORDS = []
 
-export default () => {
+/**
+ * Displays and updates a Chart of the room temperature evolution for the last 8 hours,
+ * along with boiler status information
+ */
+export default function TemperatureChart(): React.ReactElement {
   const Records = useTemperatureRecords()
   const { statuses } = useBoilerStatus()
 
@@ -104,6 +120,7 @@ export default () => {
     return minMax(recent)
   }, [Records.records])
 
+  // Time and temperature frame
   const [xBounds, yBounds] = useMemo(() => {
     let values = records.map(r => r.value)
     let dates = records.map(r => r.createdOn)

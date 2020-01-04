@@ -1,3 +1,9 @@
+/**
+ * React Hooks used to fetch the Boiler Status history
+ * @category Data Hooks
+ * @module data/boiler-status/hooks
+ * @packageDocumentation
+ */
 import { useMemo, useCallback, useEffect, useRef, useReducer } from 'react'
 import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks'
 
@@ -43,14 +49,23 @@ const useSince = () => {
 interface BoilerStatusHook {
   loading: boolean
   statuses: BoilerStatus[]
+  /** latest BoilerStatus event. Equivalent to `statuses[0]` */
   latest: BoilerStatus
+  /** Fetch all BoilerStatus events that occured since the last update */
   fetchMore: () => void
 }
 
+// This prevents re-renders
 const DEFAULT_HISTORY = []
+
+// Refresh boiler status every 60 seconds
 const REFRESH_INTERVAL = 60000
+// Don't allow refetch if one occured less than 10 seconds ago
 const MIN_INTERVAL = 10000
 
+/**
+ * Periodically fetches boiler status history
+ */
 export function useBoilerStatus(): BoilerStatusHook {
   const client = useApolloClient()
   client.addResolvers(queries.resolvers)
@@ -151,9 +166,10 @@ const POLL_TIMEOUT = 30 * 1000
  * Polls for boiler status changes every second for 30 second after either:
  *  - current target temperature changed
  *  - current room temperature changed
- * @return {void}
+ * 
+ * Any component using the `useBoilerStatus()` hook will be updated accordingly.
  */
-export function useAccurateBoilerStatus() {
+export function useAccurateBoilerStatus(): void {
   // Data source that can stop the polling
   const BoilerStatus = useBoilerStatus()
   // Data sources that can trigger the polling

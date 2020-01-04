@@ -1,0 +1,16 @@
+{
+  "name": "Niu app",
+  "mode": "modules",
+  "out": "docs",
+  "excludeExternals": true,
+  "externalPattern": "^(?!src)",
+  "theme": "minimal",
+  "exclude": [
+    "src/screens/index.ts",
+    "src/support/index.ts",
+    "**/utils.ts"
+  ],
+  "plugin": [
+    "typedoc-plugin-external-module-name"
+  ]
+}

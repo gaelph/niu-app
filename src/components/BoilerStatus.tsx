@@ -1,9 +1,26 @@
+/**
+ * # Boiler Status components
+ * ```ts
+ * import BoilerStatus from 'components/BoilerStatus'
+ * ```
+ * @category Components
+ * @module components/BoilerStatus
+ * @packageDocumentation
+ */
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 
-import Colors from '../theme/colors'
+import Colors from 'theme/colors'
 
-export default ({ status }) => {
+interface BoilerStatusProps {
+  status: boolean
+}
+
+/**
+ * Visual indication of the boiler status
+ */
+export default function BoilerStatus(props: BoilerStatusProps) {
+  const { status } = props
   const indicatorStyle = status
       ? styles.statusIndicatorOn
       : styles.statusIndicatorOff
@@ -11,7 +28,7 @@ export default ({ status }) => {
   return <View style={[styles.statusIndicator, indicatorStyle]} collapsable={false}></View>
 }
 
-
+/** @hidden */
 const styles = StyleSheet.create({
   statusIndicator: {
     width: 12,

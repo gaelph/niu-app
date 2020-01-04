@@ -1,14 +1,28 @@
+/**
+ * @category Components
+ * @module components/rule
+ * @packageDocumentation
+ */
 import React from 'react'
 import { View, StyleSheet } from 'react-native'
 
-import { Rule, Schedule } from '../../data/rules/model'
-import { Day } from '../../support/days'
+import { Rule, Schedule } from 'data/rules/model'
+import { Day } from 'support/days'
 
-import RuleListItem from './Item'
+import RuleListItem from './RuleListItem'
 
 interface RuleListProps {
   rules: Rule[]
+  /** 
+   * Default temperature setting used when creating new schedules.\
+   * See [[Settings]]
+   */
   defaultTemperature: number
+  /**
+   * Called when user starts editing a [[Rule]]\
+   * The `inputRef` passed as parameter can be used
+   * to scroll the containing `ScrollView` to it
+   */
   onStartEditing: (inputRef: any) => void
   onRemove: (rule: Rule) => void
   onNameChange: (rule: Rule, name: string) => void
@@ -20,7 +34,10 @@ interface RuleListProps {
   onRemoveSchedule: (rule: Rule, idx: number) => void
 }
 
-export default (props: RuleListProps) => {
+/**
+ * Displays a list of [[Rule]]s
+ */
+export default function RuleList(props: RuleListProps) {
   const {
     rules,
     defaultTemperature,
@@ -57,14 +74,15 @@ export default (props: RuleListProps) => {
   )
 }
 
+/**
+ * @hidden
+ */
 const styles = StyleSheet.create({
   container: {
-    // position: 'relative',
     width: '100%',
     flex: 1,
     justifyContent: 'flex-start',
     paddingHorizontal: 30, 
-    // paddingBottom: 54 + 24,
     marginTop: 40,
   },
 })

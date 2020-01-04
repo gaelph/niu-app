@@ -1,3 +1,8 @@
+/**
+ * @category Containers
+ * @module containers/hold
+ * @packageDocumentation
+ */
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   DatePickerAndroid, TimePickerAndroid, 
@@ -6,19 +11,25 @@ import {
 
 import dayjs from 'dayjs'
 
-import { TargetTemperature } from '../../data/target-temperature/model'
-import { Hold } from '../../data/hold/model'
+import { TargetTemperature } from 'data/target-temperature/model'
+import { Hold } from 'data/hold/model'
 
-import HoldModalComponent from '../../components/hold/HoldModal'
+import HoldModalComponent from 'components/hold/HoldModal'
 
 interface HoldModalProps {
   visible: boolean,
+  /** Current target temperature */
   targetTemperature: TargetTemperature,
+  /** User validated changes. If `change` is `null`, delete the [[Hold]] */
   onValueChange: (change: Hold | null) => void,
   onClose: () => void,
 }
 
-export function HoldModal({ visible, targetTemperature, onValueChange, onClose }: HoldModalProps) {
+/**
+ * A modal to create, update or delete a [[Hold]]
+ */
+export function HoldModal(props: HoldModalProps): React.ReactElement {
+  const { visible, targetTemperature, onValueChange, onClose } = props
   let [high, setHigh] = useState<number>(targetTemperature && targetTemperature.value ? targetTemperature.value : 15)
   let [untilTime, setUntilTime] = useState<dayjs.Dayjs>(targetTemperature ? targetTemperature.nextChange : dayjs())
 
@@ -30,6 +41,7 @@ export function HoldModal({ visible, targetTemperature, onValueChange, onClose }
     }
   }, [targetTemperature, visible])
 
+  // User changed the target temperature and confirmed
   const valueChanged = useCallback((high, untilTime?) => {
     if (high == null) {
       onValueChange(null)
@@ -47,6 +59,7 @@ export function HoldModal({ visible, targetTemperature, onValueChange, onClose }
     onValueChange(hold)
   }, [targetTemperature])
 
+  // User wants the Hold to end at a specific date time 
   const selectDateTime = useCallback(async () => {
     let {action, year, month, day } = await DatePickerAndroid.open({
       date: untilTime.toDate(),
@@ -71,14 +84,17 @@ export function HoldModal({ visible, targetTemperature, onValueChange, onClose }
     
   }, [high, untilTime, valueChanged])
 
+  // User wants the hold to last until the next schedule change
   const defaultDateTime = useCallback(() => {
     valueChanged(high, untilTime)
   }, [high, untilTime, valueChanged])
 
+  // User wants to resume regular schedule
   const resumeSchedule = useCallback(() => {
     valueChanged(null)
   }, [valueChanged])
 
+  // User changed temperature but did not confirm yet
   const setTemperature = useCallback((temperature) => {
     setHigh(temperature)
   }, [high, setHigh])

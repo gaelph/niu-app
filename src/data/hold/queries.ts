@@ -1,3 +1,8 @@
+/**
+ * @category Queries
+ * @module data/hold/queries
+ * @packageDocumentation
+ */
 import { gql } from 'apollo-boost';
 
 export const fetchHold = gql`

@@ -1,3 +1,29 @@
+/**
+ * # Apollo GraphQL API Client
+ * Initializes and starts the Apollo Client.
+ * 
+ * Meant to be used as hook in `App.tsx`
+ * ```jsx
+ * // App.tsx
+ * import { useApolloClient } from 'api'
+ * import { ApolloProvider } from '@apollo/react-hooks'
+ * 
+ * export default App() {
+ *   const client = useApolloClient()
+ * 
+ *   return (
+ *     <View>
+ *     { client &&
+ *       // ...
+ *     }
+ *     </View>
+ *   )
+ * }
+ * ```
+ * @category Api
+ * @module api
+ * @packageDocumentation
+ */
 import { useState, useEffect } from 'react'
 
 import { InMemoryCache } from 'apollo-cache-inmemory'
@@ -10,8 +36,8 @@ import AuthLink from './middlewares/auth'
 import LoggerLink from './middlewares/logger'
 import { HttpLink } from 'apollo-link-http'
 
-import { initialState as tempRecordState } from '../data/temperature-records/queries'
-import { initialState as boilerStatusState } from '../data/boiler-status/queries'
+import { initialState as tempRecordState } from 'data/temperature-records/queries'
+import { initialState as boilerStatusState } from 'data/boiler-status/queries'
 
 const cache = new InMemoryCache()
 const httpLink = new HttpLink({
@@ -48,7 +74,7 @@ const init = async () => {
   return client
 }
 
-export default function () {
+export default function useApolloClient(): ApolloClient<any> {
   let [client, setClient] = useState()
 
   useEffect(() => {

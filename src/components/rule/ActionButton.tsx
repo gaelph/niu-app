@@ -1,19 +1,43 @@
+/**
+ * @category Components
+ * @module components/rule
+ * @packageDocumentation
+ */
 import React from 'react';
 import { View, Text, TouchableNativeFeedback as Touchable} from 'react-native';
 import IconButton from '../buttons/IconButton'
 
-import { flex, h, p } from '../../theme/styles'
+import { flex, h, p } from 'theme/styles'
 
 interface ActionButtonProps {
   onPress?: () => void
-  icon: string
-  Provider: any
+  /** Specify a name for an icon to be drawn left or right to the button text. A Provider prop is required if `icon` is set */
+  icon?: string
+  /** Provider from `@expo/vector-icons` */
+  Provider?: any
+  /** Button text */
   title: string
-  iconPosition: 'start' | 'end'
+  /** Where to place the icon relative to the title */
+  iconPosition?: 'start' | 'end'
+  /** How to align the text within the button */
   align: 'start' | 'end'
 }
 
-export default function ActionButton({ onPress, icon, Provider, title, iconPosition, align }: ActionButtonProps) {
+/**
+ * Used in Rule List Items, this buttons are meant to be
+ * displayed at the bottom of an item while editing.\
+ * Actions associated with an `ActionButton` should be about
+ * removing a `Rule` or altering its properties
+ * 
+ * @throws Error if the `icon` prop is set without the `Provider` prop
+ * @hidden
+ */
+export default function ActionButton(props: ActionButtonProps) {
+  const { onPress, icon, Provider, title, iconPosition, align } = props
+  if (icon && !Provider) {
+    throw new Error("Provider prop missing on ActionButton. If a `icon` prop is provided, you must provide a `Provider` for it")
+  }
+
   const textSpacing = align === "start"
     ? { marginLeft: 8 }
     : { marginRight: 8 }

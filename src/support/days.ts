@@ -1,3 +1,12 @@
+/**
+ * # Days Helpers
+ * Set of functions and type definitions to help with
+ * the [[Days]] structure found in [[Rule]]
+ * @category Support
+ * @module support/days
+ * @packageDocumentation
+ */
+
 import dayjs from 'dayjs'
 import weekdays from 'dayjs/plugin/weekday'
 

@@ -1,3 +1,30 @@
+/**
+ * # AppBar
+ * The application top bar
+ * 
+ * ## Example
+ * ```jsx
+ * import { AppBar, AppBarTitle, AppBarLeft, AppBarRight, AppBarButton } from 'components/AppBar'
+ * 
+ * const Component = () => {
+ * 
+ *   return (
+ *     <AppBar>
+ *       <AppBarTitle>Application Name</AppBarTitle>
+ *       <AppBarLeft>
+ *          <AppBarButton icon="menu" onPress={() => console.log("menu pressed")} />
+ *       </AppBarLeft>
+ *       <AppBarRight>
+ *          { ... }
+ *       </AppBarRight>
+ *     </AppBar>
+ *   )
+ * }
+ * ```
+ * @category Components
+ * @module components/AppBar
+ * @packageDocumentation
+ */
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, Dimensions as Dim, Alert } from 'react-native'
 import { Feather } from '@expo/vector-icons'
@@ -6,26 +33,50 @@ import { withNavigation } from 'react-navigation'
 
 import IconButton from './buttons/IconButton'
 
-import { text, flex, m, h } from '../theme/styles'
-import Colors from '../theme/colors'
-import Dimensions from '../theme/dimensions'
-import { useDimensions } from '../support'
+import { text, flex, m, h } from 'theme/styles'
+import Colors from 'theme/colors'
+import Dimensions from 'theme/dimensions'
+import { useDimensions } from 'support'
 
-export const AppBarTitle = ({ children }) => {
+interface AppBarTitleProps {
+  children: React.ReactText | React.ReactText[]
+}
+
+/**
+ * The App bar title
+ */
+export const AppBarTitle = (props: AppBarTitleProps) => {
+  const { children } = props
+
   return (
     <Text style={[text.default, text.primary, m.l12]}>
       { children }
     </Text>
   )
 }
+interface AppBarSidesProps {
+  children: React.ReactElement | React.ReactElement[]
+}
 
-export const AppBarLeft = ({ children }) => {
+/**
+ * Components (like [[AppBarButton]]) to be displayed on the AppBar left\
+ * Such as a menu button
+ */
+export const AppBarLeft = (props: AppBarSidesProps) => {
+  const { children } = props
+
   return <>
     { children }
   </>
 }
 
-export const AppBarRight = ({ children }) => {
+/**
+ * Components (like [[AppBarButton]]) to be displayed on the AppBar right\
+ * Such as a settings button
+ */
+export const AppBarRight = (props: AppBarSidesProps) => {
+  const { children } = props
+
   return <>
     {children}
   </>
@@ -37,18 +88,39 @@ interface AppBarButtonProps {
   onPress: () => void
 }
 
-export const AppBarButton = ({ icon, provider, onPress }: AppBarButtonProps) => {
+/**
+ * An [[IconButton]] wraped to match the Appbar styling
+ */
+export const AppBarButton = (props: AppBarButtonProps) => {
+  const { icon, provider, onPress } = props
+
   return <IconButton name={icon} provider={provider || Feather} onPress={onPress} size={24} color={Colors.foreground} style={styles.icon} />
 }
 
+/**
+ * @hidden
+ * Wrap anything into an array if it isn't one
+ */
 const wrap = (maybeList) => {
   if (Array.isArray(maybeList)) return maybeList
 
   return [maybeList]
 }
 
+interface AppBarProps {
+  /** @hidden */
+  navigation: any
+  /** wheter to show a back button on the right */
+  backButton: boolean,
+  /** @hidden */
+  children: React.ReactElement | React.ReactElement[]
+}
 
-export default withNavigation(function AppBar({ navigation, backButton, children }) {
+/**
+ * Container component for the app bar
+ */
+export function AppBar(props: AppBarProps) {
+  const { navigation, backButton, children } = props
   let Screen = useDimensions('window')
 
   let goBack = useCallback(() => {
@@ -82,8 +154,11 @@ export default withNavigation(function AppBar({ navigation, backButton, children
       }
     </View>
   )
-})
+}
 
+export default withNavigation(AppBar)
+
+/** @hidden */
 const styles = StyleSheet.create({
   container: {
     width: Dim.get('window').width,
@@ -91,7 +166,6 @@ const styles = StyleSheet.create({
     height: Dimensions.appBar.height,
     padding: 16,
     paddingHorizontal: 16,
-    // backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'flex-end',
   },

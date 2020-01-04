@@ -1,7 +1,33 @@
+/**
+ * # Time
+ * @category Support
+ * @module time
+ * @packageDocumentation
+ */
 import dayjs from 'dayjs'
 
-
-
+/**
+ * A Data structure to help manipulate Naive times.
+ * 
+ * `Time` objects can be used directly in template strings.\
+ * **Example**\
+ * ```ts
+ * const time = new Time(4, 48)
+ * 
+ * console.log(time)
+ * // 4:48
+ * ```
+ * 
+ * They can also be used as is for algebra (addition, substraction, comparison, ...),
+ * as they convert automatically to minutes since midnight.\
+ * **Example**
+ * ```ts
+ * const a = new Time(0, 30)
+ * const b = new Time(1, 0)
+ * 
+ * console.log(+a + +b)
+ * // 90
+ */
 export default class Time {
   hours: number;
   minutes: number;
@@ -11,6 +37,10 @@ export default class Time {
     this.minutes = parseInt(minutes.toString(), 10)
   }
 
+  /**
+   * Attempts to create a Time instance from anything
+   * @throws if it fails
+   */
   static from(something: string | { hours: number | string; minutes: number | string } | Date): Time {
     if (typeof something === 'string') {
       return Time.fromString(something as string)
@@ -54,14 +84,26 @@ export default class Time {
     return new Time(h, m)
   }
 
-  toString() {
+  /**
+   * Returns a displayable string like `4:56`
+   */
+  toString(): string {
     return `${this.hours}:${this.minutes.toString().padStart(2, '0')}`
   }
 
+  /**
+   * Converts `Time` to minutes (elapsed minutes from midnight)
+   */
   toMinutes() {
     return this.hours * 60 + this.minutes
   }
 
+  /**
+   * Converts `Time` to minutes or to a displayable string
+   * depending on context.\
+   * So `Time` objects can be used in template string,
+   * or used for mathematical operations.
+   */
   [Symbol.toPrimitive](hint: "string" | "number" | "default") {
     switch (hint) {
       case "string":

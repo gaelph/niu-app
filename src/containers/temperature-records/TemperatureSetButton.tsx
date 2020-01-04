@@ -1,17 +1,27 @@
+/**
+ * @category Containers
+ * @module containers/temperature-records
+ * @packageDocumentation
+ */
 import React, { useState } from 'react'
 
 import TemperatureModal from './TemperatureModal'
-import TemperatureSetButtonComponent from '../../components/shared/TemperatureSetButton'
+import TemperatureSetButtonComponent from 'components/shared/TemperatureSetButton'
 
 
 type TemperatureSetterProps = {
   value: number,
   defaultValue: number | '',
   message: string,
-  onChange: (value: string) => void
+  onChange: (value: string | number) => void
 }
 
-export default function TemperatureSetter({ value, defaultValue, onChange, message }: TemperatureSetterProps) {
+/**
+ * A button that shows a temperature, and opens a modal to change the value on press
+ */
+export default function TemperatureSetter(props: TemperatureSetterProps): React.ReactElement{
+  const { value, defaultValue, onChange, message } = props
+
   let [modalVisible, setModalVisible] = useState(false)
 
   return (

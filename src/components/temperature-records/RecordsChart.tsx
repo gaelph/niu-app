@@ -1,16 +1,21 @@
-import React from 'react';
+/**
+ * @category Components
+ * @module components/temperature-records
+ * @packageDocumentation
+ */
+import React from 'react'
 import { View } from 'react-native'
 
 import { AreaChart, Grid, YAxis, XAxis } from 'react-native-svg-charts'
 import { LinearGradient, Defs, Stop, Path } from 'react-native-svg'
 import * as shape from 'd3-shape'
 
-import { TemperatureRecord } from '../../data/temperature-records/model'
+import { TemperatureRecord } from 'data/temperature-records/model'
 
-import Colors from '../../theme/colors'
-import Dimensions from '../../theme/dimensions'
+import Colors from 'theme/colors'
+import Dimensions from 'theme/dimensions'
 
-
+/** @hidden */
 const TemperatureGradient = ({ id, color }: { id: string, color: string }) => (
   <Defs>
       <LinearGradient id={id} x1="0%" y1="0%" x2="0%" y2="110">
@@ -20,6 +25,7 @@ const TemperatureGradient = ({ id, color }: { id: string, color: string }) => (
     </Defs>
 )
 
+/** @hidden */
 const BoilerGradient = ({ id, color }: { id: string, color: string }) => (
   <Defs>
       <LinearGradient id={id} x1="0%" y1="0%" x2="0%" y2="110">
@@ -29,7 +35,7 @@ const BoilerGradient = ({ id, color }: { id: string, color: string }) => (
     </Defs>
 )
 
-
+/** @hidden */
 const TemperatureLine = ({ line, color }: { line?: any, color: string }) => {
   return <>
   {
@@ -45,6 +51,7 @@ const TemperatureLine = ({ line, color }: { line?: any, color: string }) => {
   </>
 }
 
+/** @hidden */
 class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     console.warn(error)
@@ -59,14 +66,23 @@ class ErrorBoundary extends React.Component {
 }
 
 interface RecordsChartProps {
+  /** Temperature records */
   records: TemperatureRecord[],
+  /** Ranges of boiler statuses.\These ranges represent when the boiler was ON */
   boilerStatusRanges: { from: Date, to: Date }[],
+  /** Time frame bounds */
   xBounds: { min: number, max: number },
+  /** Temperature bounds */
   yBounds: { min: number, max: number },
+  /** Graph width */
   width: number
 }
 
-export default function RecordsChart({ records, boilerStatusRanges, xBounds, yBounds, width }: RecordsChartProps) {
+/**
+ * Chart displaying the history of temperature records and boiler statuses
+ */
+export default function RecordsChart(props: RecordsChartProps) {
+  const { records, boilerStatusRanges, xBounds, yBounds, width } = props
   const chartWidth = width - 2 * Dimensions.padding
 
   return (

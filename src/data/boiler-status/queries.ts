@@ -1,3 +1,8 @@
+/**
+ * @category Queries
+ * @module data/boiler-status/queries
+ * @packageDocumentation
+ */
 import { gql } from 'apollo-boost';
 
 export const fetchBoilerStatus = gql`

@@ -39,6 +39,8 @@
     "@types/react-native": "^0.57.65",
     "babel-preset-expo": "^7.1.0",
     "cz-conventional-changelog": "3.0.2",
+    "typedoc": "^0.15.6",
+    "typedoc-plugin-external-module-name": "^2.1.0",
     "typescript": "^3.6.3"
   },
   "private": true,

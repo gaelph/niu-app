@@ -1,20 +1,42 @@
+/**
+ * @category Data Model
+ * @module data/target-temperature/model
+ * @packageDocumentation
+ */
 import dayjs from 'dayjs'
 
 import { Schedule } from '../rules/model'
 import { Hold } from '../hold/model'
 
-import { DayFromNumber, weekday } from '../../support/days'
+import { DayFromNumber, weekday } from 'support/days'
 
+/**
+ * Currently active schedule (`current`)
+ * and time at which it stops being active (`nextChnage`).
+ * 
+ * If no schedule is active, then `current`
+ * is null or undefined
+ * and `nextChange` is the time the next
+ * schedule will be active
+ */
 export interface CurrentSchedule {
   current?: Schedule | null
   nextChange?: dayjs.Dayjs
 }
 
+/**
+ * Information about the current target temperature
+ */
 export class TargetTemperature {
+  /** The current temperature*/
   value: number
+  /** The device timezone */
   timezone: number
+  /** Id of the currently active hold, or `false` if no hold is active */
   hold: string | boolean
+  /** `true` if a schedule is currently active */
   schedule: boolean
+  /** Time of next target temperature change */
   nextChange: dayjs.Dayjs | null
 
   constructor(value: number, timezone: number, hold: string | boolean, schedule: boolean, nextChange?: dayjs.Dayjs) {
@@ -25,10 +47,16 @@ export class TargetTemperature {
     this.nextChange = nextChange || null
   }
 
+  /**
+   * Instanciate a new `TargetTemperature` from a [[Hold]]
+   */
   static fromHold(hold: Hold, timezone: number) {
     return new TargetTemperature(hold.value, timezone, hold.id, false, hold.untilTime)
   }
 
+  /**
+   * Instanciate a new `TargetTemperature` from a [[Schedule]]
+   */
   static fromCurrentSchedule(state: CurrentSchedule, timezone: number, awayTemperature: number) {
     if (state.current) {
       const { current: schedule } = state
@@ -82,6 +110,9 @@ export class TargetTemperature {
     return `${dayName} at ${time}`
   }
 
+  /**
+   * Returns a string to be displayed to the user
+   */
   display() {
     let output = ''
 
@@ -96,5 +127,12 @@ export class TargetTemperature {
     }
 
     return output
+  }
+
+  /**
+   * Avoid the use of `display()` in template strings
+   */
+  toString() {
+    return this.display()
   }
 }

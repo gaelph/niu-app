@@ -1,19 +1,26 @@
+/**
+ * @category Components
+ * @module components/rule
+ * @packageDocumentation
+ */
 import React from 'react'
 import * as Svg from 'react-native-svg'
-import Time from '../../support/time'
-import { Schedule } from '../../data/rules/model'
+import Time from 'support/time'
+import { Schedule } from 'data/rules/model'
 
-import Colors from '../../theme/colors'
+import Colors from 'theme/colors'
 
+/** @hidden */
 const MINUTES_IN_DAY = 24 * 60
 
-
+/** @hidden */
 function xForMinutes(minutes: number, width: number, margin: number = 0): number {
   let ratio = minutes / MINUTES_IN_DAY
 
   return margin + Math.round(ratio * (width - margin))
 }
 
+/** @hidden */
 interface TimeIndicatorProps {
   from: Time,
   to: Time,
@@ -22,7 +29,10 @@ interface TimeIndicatorProps {
   padding: number
 }
 
-function TimeIndicator({ from, to, width, padding }: TimeIndicatorProps) {
+/** @hidden */
+function TimeIndicator(props: TimeIndicatorProps) {
+  const { from, to, width, padding } = props
+
   let fromMinutes = from.toMinutes()
   let toMinutes = to.toMinutes()
 
@@ -77,7 +87,12 @@ interface TimeBarProps {
   padding: number
 }
 
-export default function TimeBar({ schedules, width, height, padding }: TimeBarProps) {
+/**
+ * Displays a schedules on bar in RuleListItems
+ * @hidden
+ */
+export default function TimeBar(props: TimeBarProps) {
+  let { schedules, width, height, padding } = props
   width -= padding
 
   return <Svg.Svg width={width} height={height}>

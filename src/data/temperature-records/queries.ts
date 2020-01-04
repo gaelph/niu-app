@@ -1,3 +1,8 @@
+/**
+ * @category Queries
+ * @module data/temperature-records/queries
+ * @packageDocumentation
+ */
 import { gql } from 'apollo-boost';
 
 export const fetchTemperatureRecords = gql`

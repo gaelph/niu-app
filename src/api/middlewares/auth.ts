@@ -1,6 +1,15 @@
+/**
+ * @category Api
+ * @module api/middlewares
+ * @packageDocumentation
+ */
 import { ApolloLink } from 'apollo-link'
 
-export default new ApolloLink((operation, forward) => {
+/**
+ * Request authentication middleware\
+ * Adds the authentication token to every request
+ */
+const AuthLink = new ApolloLink((operation, forward) => {
   // add the authorization to the headers
   operation.setContext(({ headers = {} }) => ({
     headers: {
@@ -11,3 +20,5 @@ export default new ApolloLink((operation, forward) => {
 
   return forward(operation)
 })
+
+export default AuthLink

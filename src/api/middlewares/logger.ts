@@ -1,7 +1,15 @@
+/**
+ * @category Api
+ * @module api/middlewares
+ * @packageDocumentation
+ */
 import { ApolloLink } from 'apollo-link'
 
-
-export default new ApolloLink((operation, forward) => {
+/**
+ * Logger Middleware\
+ * Logs every query and mutation to the console
+ */
+const LoggerLink = new ApolloLink((operation, forward) => {
   const start = +new Date()
   const queries = operation.query.definitions.reduce((acc, def) => {
     // @ts-ignore
@@ -20,7 +28,6 @@ export default new ApolloLink((operation, forward) => {
     const duration = +new Date() - start
 
     Object.keys(queries).forEach(key => {
-      // console.group(key)
       const { type, selections } = queries[key]
       if (data) {
         selections.forEach(selection => {
@@ -29,8 +36,6 @@ export default new ApolloLink((operation, forward) => {
           }
         })
       }
-
-      // console.groupEnd() 
     })
 
     if (errors) {
@@ -42,3 +47,5 @@ export default new ApolloLink((operation, forward) => {
     return result
   })
 })
+
+export default LoggerLink

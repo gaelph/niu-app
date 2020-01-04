@@ -1,12 +1,17 @@
+/**
+ * @category Containers
+ * @module containers/settings
+ * @packageDocumentation
+ */
 import React, { useCallback, useMemo } from 'react'
-import Toast from '../../support/toast'
+import Toast from 'support/toast'
 
-import { Setting } from '../../data/settings/model'
-import { useSettings, DEFAULT_TARGET, AWAY_TEMPERATURE, APP_VERSION, RESET_APP } from '../../data/settings/hooks'
+import { Setting } from 'data/settings/model'
+import { useSettings, DEFAULT_TARGET, AWAY_TEMPERATURE, APP_VERSION, RESET_APP } from 'data/settings/hooks'
 
 import TemperatureItem from './TemperatureItem'
 
-import SettingItem, { ListItem } from '../../components/settings/Item'
+import SettingItem, { ListItem } from 'components/settings/Item'
 
 import { FlatList } from 'react-native'
 
@@ -21,6 +26,9 @@ const SETTINGS_STRUCTURE = [
   RESET_APP
 ]
 
+/**
+ * Returns the appropriate component for a setting
+ */
 function componentForSetting(setting: Setting): ({ item: ListItem, onChange: Function }) => React.ReactElement {
   switch (setting.id) {
     case AWAY_TEMPERATURE.id:
@@ -32,6 +40,9 @@ function componentForSetting(setting: Setting): ({ item: ListItem, onChange: Fun
   }
 }
 
+/**
+ * Builds a list of setting descriptor suitable for use by a `FlatList`
+ */
 function buildSettingsList(settings: Setting[]): SettingItem<any>[] {
   let items = []
 
@@ -63,7 +74,11 @@ function buildSettingsList(settings: Setting[]): SettingItem<any>[] {
   return items
 }
 
-export default () => {
+/**
+ * Display a list of Settings.\
+ * Meant for the Settings screen
+ */
+export default function SettingsList(): React.ReactElement {
   const Settings = useSettings({
     onUpdate: Toast.showChangesOK,
     onError: error => {

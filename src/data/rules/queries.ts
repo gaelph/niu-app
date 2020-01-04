@@ -1,3 +1,8 @@
+/**
+ * @category Queries
+ * @module data/rules/queries
+ * @packageDocumentation
+ */
 import { gql } from 'apollo-boost';
 
 export const fetchRules = gql`

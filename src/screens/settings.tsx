@@ -1,14 +1,19 @@
+/**
+ * @category Screens
+ * @module settings
+ * @packageDocumentation
+ */
 import React from 'react'
 import { View } from 'react-native'
 
 
-import { StatusBar, useDimensions } from '../support/dimensions'
+import { StatusBar, useDimensions } from 'support/dimensions'
 
-import Colors from '../theme/colors'
+import Colors from 'theme/colors'
 
 
-import SettingsBar from '../containers/SettingsBar'
-import SettingsList from '../containers/settings/List'
+import SettingsBar from 'containers/SettingsBar'
+import SettingsList from 'containers/settings/List'
 
 export const Settings = () => {
   let Screen = useDimensions('window')

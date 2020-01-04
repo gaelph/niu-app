@@ -1,13 +1,23 @@
+/**
+ * @category Containers
+ * @module containers/temperature-records
+ * @packageDocumentation
+ */
 import React, { useCallback } from 'react'
 
-import TemperaturePickerComponent from '../../components/shared/TemperaturePicker'
+import TemperaturePickerComponent from 'components/shared/TemperaturePicker'
 
 interface TemperaturePickerProps {
   value: string,
   onValueChange: (value: number) => void
 }
 
-export default function TemperaturePicker({ value, onValueChange }: TemperaturePickerProps) {
+/**
+ * Temperature picker (not a modal)
+ */
+export default function TemperaturePicker(props: TemperaturePickerProps): React.ReactElement{
+  const { value, onValueChange } = props
+
   const increment = useCallback(() => {
     let v = parseInt(value, 10) + 1
 

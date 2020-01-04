@@ -1,3 +1,9 @@
+/**
+ * React Hook use to fetch TemperartureRecords
+ * @category Data Hooks
+ * @module data/temperature-records/hooks
+ * @packageDocumentation
+ */
 import { useMemo, useEffect, useCallback, useRef } from 'react'
 import { useQuery, useMutation, useApolloClient } from '@apollo/react-hooks'
 import { ApolloError } from 'apollo-client'
@@ -23,8 +29,10 @@ const useSince = () => {
 interface TemperatureRecordResult {
   loading: boolean
   records: TemperatureRecord[]
+  /** latest record. Equivalet to `records[0]`. null if `records` is empty */
   latest: TemperatureRecord | null
   error: ApolloError
+  /** Fetches newer records */
   fetchMore: () => void
 }
 
@@ -33,7 +41,8 @@ const REFRESH_INTERVAL = 60000
 const MIN_INTERVAL = 10000
 
 /**
- * Hook to provide temperature records to a view
+ * Hook to provide temperature records to a view.\
+ * Polls for new values every minute
  */
 export function useTemperatureRecords(): TemperatureRecordResult {
   const client = useApolloClient()

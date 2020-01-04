@@ -1,4 +1,9 @@
-import React from 'react';
+/**
+ * @category Components
+ * @module components/hold
+ * @packageDocumentation
+ */
+import React from 'react'
 import {
   View, Text, Modal,
   StyleSheet
@@ -7,11 +12,16 @@ import {
 import dayjs from 'dayjs'
 
 import Button from '../buttons/Button'
-import TemperaturePicker from '../../containers/temperature-records/TemperaturePicker'
+import TemperaturePicker from 'containers/temperature-records/TemperaturePicker'
 
-import Colors from '../../theme/colors'
-import { flex, h, v, m, p, text } from '../../theme/styles'
+import Colors from 'theme/colors'
+import { flex, h, v, m, p, text } from 'theme/styles'
 
+
+// TODO: Move to a support module
+/**
+ * @hidden
+ */
 function displayDatetime(datetime: dayjs.Dayjs): string {
   let time = datetime.format('H:mm')
   let day = ''
@@ -33,17 +43,32 @@ function displayDatetime(datetime: dayjs.Dayjs): string {
 }
 
 interface HoldModalProps {
+  /** Show or hide the modal */
   visible: boolean,
+  /** Temperature target to set as override */
   value: number | string,
+  /** Time to stop the override */
   untilTime: dayjs.Dayjs,
+  /** Is an override on going ? */
   ongoing: boolean
+  /** Callback when user changes the temperature */
   onTemperatureChange: (value: number) => void,
+  /** Callback when user picks the next change as `untilTime` */
   onSelectDefaultDateTime: () => void,
+  /** Callback when user picks a custom date and time for `untilTime` */
   onSelectDateTime: () => Promise<void>
+  /** Callback when user chooses to resume the schedule */
   onResumeSchedule: () => void,
+  /** user canceled */
   onCancel: () => void,
 }
 
+/**
+ * Displays a modal dialog to allow the user to:
+ *  - override the current schedule (create a Hold),
+ *  - update the current override (update the current Hold),
+ *  - resume the regular schedule (delete the current Hold)
+ */
 export default function HoldModal(props: HoldModalProps) {
   const {
     visible,
@@ -91,6 +116,9 @@ export default function HoldModal(props: HoldModalProps) {
   </Modal>
 }
 
+/**
+ * @hidden
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

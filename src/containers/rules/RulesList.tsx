@@ -1,16 +1,21 @@
+/**
+ * @category Containers
+ * @module containers/rules
+ * @packageDocumentation
+ */
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { TimePickerAndroid, TimePickerAndroidTimeSetAction } from 'react-native'
 import dayjs from 'dayjs'
 
-import { useRules } from '../../data/rules/hooks'
-import { useSettings, DEFAULT_TARGET } from '../../data/settings/hooks'
-import { Rule, Schedule } from '../../data/rules/model'
+import { useRules } from 'data/rules/hooks'
+import { useSettings, DEFAULT_TARGET } from 'data/settings/hooks'
+import { Rule, Schedule } from 'data/rules/model'
 
-import Toast from '../../support/toast'
-import { Day } from '../../support/days'
-import Time from '../../support/time'
+import Toast from 'support/toast'
+import { Day } from 'support/days'
+import Time from 'support/time'
 
-import RuleList from '../../components/rule/List'
+import RuleList from 'components/rule/RuleList'
 
 function nextDays(days: {[K in Day]: boolean}, date: Date): Date[] {
   return Object.values(days)
@@ -22,7 +27,7 @@ function nextDays(days: {[K in Day]: boolean}, date: Date): Date[] {
 }
 
 async function openTimePicker(schedule: Schedule, property: "from" | "to"): Promise<Schedule | undefined> {
-  let time = schedule[property]
+  let time = schedule[property as string]
   let {action, hour, minute} = await TimePickerAndroid.open({
     hour: time.hours,
     minute: time.minutes,
@@ -37,7 +42,15 @@ async function openTimePicker(schedule: Schedule, property: "from" | "to"): Prom
   }
 }
 
-export default ({ onStartEditing }) => {
+interface RulesListProps {
+  onStartEditing: (inputRef: React.MutableRefObject<React.ReactElement>) => void
+}
+
+/**
+ * Displays a list of Rules and allows for modifying or deleting them
+ */
+export default function RulesList(props: RulesListProps): React.ReactElement {
+  const { onStartEditing } = props
   const Rules = useRules({
     onMutationSuccess: () => Toast.showChangesOK(),
     onMutationError: error => {
@@ -47,6 +60,7 @@ export default ({ onStartEditing }) => {
       Toast.showError()
     }
   })
+  // Keep a local copy of rules to allow for debouncing user input
   const [localRules, setLocalRules] = useState(Rules.rules)
 
   useEffect(() => {
@@ -60,6 +74,7 @@ export default ({ onStartEditing }) => {
 
   const debounceTimeout = useRef<number>()
 
+  // DEBOUNCE USER INPUT
   const debouncedUpdate = useCallback((update) => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current)
 

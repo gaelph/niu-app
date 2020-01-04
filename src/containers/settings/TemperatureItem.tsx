@@ -1,12 +1,28 @@
+/**
+ * @category Containers
+ * @module containers/settings
+ * @packageDocumentation
+ */
 import React, { useState } from 'react'
 import { Text } from 'react-native'
 
-import SettingItem, { ListItem } from '../../components/settings/Item'
+import SettingItem, { ListItem } from 'components/settings/Item'
 import TemperatureModal from '../temperature-records/TemperatureModal'
 
-import { text } from '../../theme/styles'
+import { text } from 'theme/styles'
 
-export default ({ item, onChange }: { item: ListItem<number>, onChange: (value: number) => void }): React.ReactElement => {
+interface TemperatureItemProps {
+  item: ListItem<number>
+  onChange: (value: string | number) => void
+}
+
+/**
+ * An Item for `SettingsList`, for temperature settings\
+ * Shows the settings value as a temperature on the right.\
+ * Triggers a Modal to edit the value on press.
+ */
+export default function TemperatureItem(props: TemperatureItemProps): React.ReactElement {
+  const { item, onChange } = props
   let [showModal, setShowModal] = useState(false)
   const { description, value } = item
 

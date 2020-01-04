@@ -1,3 +1,20 @@
+/**
+ * React Hook use to get the current target temperature
+ * 
+ * **Example**
+ * ```ts
+ * import { useCurrentTargetTemperature } from 'data/target-temperature/hooks'
+ * 
+ * function Component() {
+ *   const { value } = useCurrentTargetTemperature()
+ * 
+ *   //...
+ * }
+ * ```
+ * @category Data Hooks
+ * @module data/target-temperature/hooks
+ * @packageDocumentation
+ */
 import {useState, useRef, useEffect, useMemo } from 'react'
 import dayjs from 'dayjs'
 

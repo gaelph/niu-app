@@ -1,3 +1,8 @@
+/**
+ * @category Screens
+ * @module home
+ * @packageDocumentation
+ */
 // External imports
 import React, { useCallback, useRef } from 'react'
 import {
@@ -9,23 +14,23 @@ import {
 } from 'react-native'
 
 // Styles and dimensions
-import Colors from '../theme/colors'
-import Dimensions from '../theme/dimensions'
-import { StatusBar, useDimensions } from '../support/dimensions'
+import Colors from 'theme/colors'
+import Dimensions from 'theme/dimensions'
+import { StatusBar, useDimensions } from 'support/dimensions'
 
 // Data layer
-import { useTemperatureRecords } from '../data/temperature-records/hooks'
-import { useBoilerStatus } from '../data/boiler-status/hooks'
-import { useSettings } from '../data/settings/hooks'
-import { useRules } from '../data/rules/hooks'
+import { useTemperatureRecords } from 'data/temperature-records/hooks'
+import { useBoilerStatus } from 'data/boiler-status/hooks'
+import { useSettings } from 'data/settings/hooks'
+import { useRules } from 'data/rules/hooks'
 
 // Container views
-import AppBar from '../containers/AppBar'
-import HoldButton from '../containers/hold/HoldButton'
-import RuleList from '../containers/rules/RulesList'
-import AddRuleButton from '../containers/rules/AddRuleButton'
-import Temperature from '../containers/temperature-records/Temperature'
-import TemperatureChart from '../containers/temperature-records/TemperatureChart'
+import AppBar from 'containers/AppBar'
+import HoldButton from 'containers/hold/HoldButton'
+import RuleList from 'containers/rules/RulesList'
+import AddRuleButton from 'containers/rules/AddRuleButton'
+import Temperature from 'containers/temperature-records/Temperature'
+import TemperatureChart from 'containers/temperature-records/TemperatureChart'
 
 
 export function Home() {

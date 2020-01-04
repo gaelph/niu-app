@@ -1,3 +1,45 @@
+/**
+ * # Apollo Cache Persistance
+ * Persists Apollo Cache to ReactNative's AsyncStorage
+ * 
+ * To initialize persistance:
+ * 
+ * ```ts
+ * import { InMemoryCache } from 'apollo-cache-inmemory'
+ * import { initPersistor } from 'api/persistance'
+ * 
+ * (async () => {
+ *   const cache = new InMemoryCache()
+ *   const Peristor = await initPersistor(cache)
+ * })()
+ * ```
+ * 
+ * To be able to reset the app storage (clear all data),
+ * the persistance resolvers must be added to the client instance:
+ * 
+ * ```ts
+ * import { ApolloClient } from 'apollo-client'
+ * import { resolvers as persistanceResolvers } from 'api/persistance'
+ * 
+ * const client = new ApolloClient()
+ * 
+ * client.addResolvers(persistanceResolvers)
+ * ```
+ * 
+ * After the persistor is initialized, the `Persistor` can be accessed
+ * from anywhere:
+ * 
+ * ```ts
+ * import Persistor from 'api/persistance'
+ * 
+ * // Persistor.pause()
+ * // Persistor.resume()
+ * // ...
+ * ```
+ * @category Api
+ * @module api/persistance
+ * @packageDocumentation
+ */
 import { AsyncStorage } from 'react-native'
 import { Updates } from 'expo'
 import { CachePersistor } from 'apollo-cache-persist'

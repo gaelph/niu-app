@@ -2,8 +2,8 @@ import {useState, useRef, useEffect, useMemo } from 'react'
 import dayjs from 'dayjs'
 
 import { Rule, Schedule } from '../rules/model'
-import Time from '../../support/time'
-import { weekday } from '../../support/days'
+import Time from 'support/time'
+import { weekday } from 'support/days'
 
 import { CurrentSchedule, TargetTemperature } from './model'
 
@@ -114,6 +114,7 @@ function flatMap<T>(array: Array<any>): Array<T> {
 //
 // The next temperature change should indicate
 //  - the date and time it occurs
+/** @hidden */
 export function currentDeviceState(rules: Rule[], timezoneOffset: number): CurrentSchedule {
   const now = dayjs().utcOffset(timezoneOffset / 60);
   const nextSevenDays = getNextSevenDays(now);
