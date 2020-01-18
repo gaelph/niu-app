@@ -62,6 +62,14 @@ export function useHold(options?: HoldHookOptions): HoldHook | null {
   const [update, _updateStatus] = useMutation(queries.updateHold, {
     onCompleted: options && options.onMutationSuccess,
     onError: options && options.onMutationError,
+    update(cache, { data: { updateHold } }) {
+      cache.writeQuery({
+        query: queries.fetchHold,
+        data: {
+          getHold: updateHold
+        }
+      })
+    }
   })
 
   const [remove, _removeStatus] = useMutation(queries.deleteHold, {
