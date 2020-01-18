@@ -60,11 +60,20 @@ export function useTemperatureRecords(): TemperatureRecordResult {
   // When records change, update the since value
   useEffect(() => {
     if (data) {
-      try {
-        let newSince = data.temperatureRecordsSince[0].createdOn
-        setSince(newSince)
-      } catch {
-        // ignore
+      if (data.temperatureRecordsSince 
+        && Array.isArray(data.temperatureRecordsSince) 
+        && data.temperatureRecordsSince.length > 0) {
+          console.log(data.temperatureRecordsSince.length, 'temperature records')
+        try {
+          let newSince = data.temperatureRecordsSince[0].createdOn
+          setSince(newSince)
+        } catch (error) {
+          console.error(error)
+          // ignore
+        }
+      }
+      else {
+        console.log('No temperature records !')
       }
     }
   }, [data])

@@ -147,13 +147,18 @@ export default function RecordsChart(props: RecordsChartProps) {
       </View>
       <ErrorBoundary>
         <XAxis data={records} numberOfTicks={3} formatLabel={(v) => {
-          let date = records[v].createdOn;
+          if (records[v]
+            && records[v].createdOn) {
+            let date = records[v].createdOn;
 
-          if (date) {
-            let h = date.getHours();
-            let m = date.getMinutes();
+            if (date) {
+              let h = date.getHours();
+              let m = date.getMinutes();
 
-            return `${h}h${m.toString().padStart(2, '0')}`
+              return `${h}h${m.toString().padStart(2, '0')}`
+            }
+          } else {
+            return null
           }
         }}
           style={{ marginTop: 8}}
