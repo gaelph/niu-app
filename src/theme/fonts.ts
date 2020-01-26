@@ -39,6 +39,9 @@ const fonts = {
  */
 export type FontsHookResult = [boolean, boolean, Error]
 
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 /**
  * React Hook to load fonts
  */
@@ -49,6 +52,9 @@ export function useFonts(): FontsHookResult {
     dispatch({ type: AsyncActions.Fetching })
     
     Font.loadAsync(fonts)
+    .then(() => {
+      return wait(2000)
+    })
     .then(() => {
       dispatch({ type: AsyncActions.Fetched, payload: true })
     })

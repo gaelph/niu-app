@@ -14,10 +14,12 @@ import { flex, v } from './src/theme/styles'
 import useApolloClient from './src/api'
 import { ApolloProvider } from '@apollo/react-hooks'
 
-
+import * as ErrorRecovery from 'expo-error-recovery';
 // Error handling
 ErrorUtils.setGlobalHandler((error) => {
   console.error(error)
+
+  ErrorRecovery.setRecoveryProps({ error })
 
   Alert.alert(
     error.message,
@@ -46,21 +48,32 @@ const AppNavigator = createStackNavigator({
 const AppContainer = createAppContainer(AppNavigator);
 
 
-export default function App() {
+export default function App({ exp }) {
   let [loaded, error] = useFonts()
   const client = useApolloClient()
 
+  if (exp.errorRecovery) {
+    let error = exp.errorRecovery.error
+    Alert.alert(
+      error.message,
+      error.stack,
+      [
+        { text: 'OK' }
+      ]
+    )
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      {loaded && client &&
+      { loaded && client 
+      ?
         <>
           <ApolloProvider client={client}>
             <StatusBar translucent={true} backgroundColor={'transparent'}/>
             <AppContainer />
           </ApolloProvider>
         </>
-      }
-      { (!loaded || !client) &&
+      :
         <View style={[flex, v.center]}>
           <ActivityIndicator size={90} color={Colors.text.primary} />
         </View>

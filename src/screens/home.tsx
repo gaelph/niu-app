@@ -131,15 +131,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   contentContainer: {
-    flex: null,
-    // width: '100%',
     alignItems: 'center',
     paddingTop: StatusBar.height,
     paddingBottom: Dimensions.appBar.height + StatusBar.height,
     justifyContent: 'flex-start',
   },
   view: {
-    flex: null, width: '100%'
+    width: '100%'
   },
   text: {
     color: Colors.foreground,
